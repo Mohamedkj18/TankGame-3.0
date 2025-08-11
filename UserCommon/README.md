@@ -1,0 +1,1 @@
+shall include your own common files, files that are required by more than one project. Your makefiles and includes may use those files where needed to avoid duplication. All your code in this folder shall be located inside a namespace with the unique name UserCommon_098765432_123456789

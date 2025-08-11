@@ -1,0 +1,1 @@
+in order to allow us to load different Algorithm “.so” files together, the name of the .so file must be unique, using the ids of the submitters, as follows: Algorithm_098765432_123456789.so additionally, all your code shall be located inside a namespace with the unique name Algorithm_098765432_123456789
