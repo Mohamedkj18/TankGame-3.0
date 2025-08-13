@@ -45,31 +45,31 @@ class AlgorithmRegistrar
             return tankAlgorithmFactory != nullptr;
         }
     };
-    std::vector<AlgorithmAndPlayerFactories> algorithms;
+    std::unordered_map<std::string,AlgorithmAndPlayerFactories> algorithms;
     static AlgorithmRegistrar registrar;
 
 public:
     static AlgorithmRegistrar &getAlgorithmRegistrar();
     void createAlgorithmFactoryEntry(const std::string &name)
     {
-        algorithms.emplace_back(name);
+        algorithms[name] = AlgorithmAndPlayerFactories(name);
     }
-    void addPlayerFactoryToLastEntry(PlayerFactory &&factory)
+    void addPlayerFactoryToLastEntry(std::string so_name,PlayerFactory &&factory)
     {
-        algorithms.back().setPlayerFactory(std::move(factory));
+        algorithms[so_name].setPlayerFactory(std::move(factory));
     }
-    void addTankAlgorithmFactoryToLastEntry(TankAlgorithmFactory &&factory)
+    void addTankAlgorithmFactoryToLastEntry(std::string so_name,TankAlgorithmFactory &&factory)
     {
-        algorithms.back().setTankAlgorithmFactory(std::move(factory));
+        algorithms[so_name].setTankAlgorithmFactory(std::move(factory));
     }
     struct BadRegistrationException
     {
         std::string name;
         bool hasName, hasPlayerFactory, hasTankAlgorithmFactory;
     };
-    void validateLastRegistration()
+    void validateLastRegistration(std::string so_name)
     {
-        const auto &last = algorithms.back();
+        const auto &last = algorithms[so_name];
         bool hasName = (last.name() != "");
         if (!hasName || !last.hasPlayerFactory() || !last.hasTankAlgorithmFactory())
         {
@@ -80,10 +80,7 @@ public:
                 last.hasTankAlgorithmFactory()};
         }
     }
-    void removeLast()
-    {
-        algorithms.pop_back();
-    }
+    
     auto begin() const
     {
         return algorithms.begin();

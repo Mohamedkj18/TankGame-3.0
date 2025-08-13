@@ -31,7 +31,7 @@ public:
             return factory != nullptr;
         }
     };
-    std::vector<GameManagerFactory> gameManagers;
+    std::unordered_map<std::string,GameManagerFactory> gameManagers;
     static GameManagerRegistrar registrar;
 
 public:
@@ -41,20 +41,20 @@ public:
     }
     void createGameManagerFactoryEntry(const std::string &name)
     {
-        gameManagers.emplace_back(name);
+        gameManagers[name] = GameManagerFactory(name);
     }
-    void addGameManagerFactoryToLastEntry(std::function<std::unique_ptr<AbstractGameManager>(bool verbose)> &&factory)
+    void addGameManagerFactoryToLastEntry(std::string so_name, std::function<std::unique_ptr<AbstractGameManager>(bool verbose)> &&factory)
     {
-        gameManagers.back().setFactory(std::move(factory));
+        gameManagers[so_name].setFactory(std::move(factory));
     }
     struct BadRegistrationException
     {
         std::string name;
         bool hasName, hasFactory;
     };
-    void validateLastRegistration()
+    void validateLastRegistration(std::string so_name)
     {
-        const auto &last = gameManagers.back();
+        const auto &last = gameManagers[so_name];
         bool hasName = (last.name() != "");
         if (!hasName || !last.hasFactory())
         {
@@ -64,12 +64,12 @@ public:
                 last.hasFactory()};
         }
     }
-    void removeLast()
+    void removeLast(std::string so_name)
     {
         if (gameManagers.empty())
         {
             throw std::runtime_error("No game manager registrations to remove.");
         }
-        gameManagers.pop_back();
+        gameManagers.erase(so_name);
     }
 };
