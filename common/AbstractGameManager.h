@@ -24,3 +24,5 @@ public:
         TankAlgorithmFactory player1_tank_algo_factory,
         TankAlgorithmFactory player2_tank_algo_factory) = 0;
 };
+
+using GameManagerFactory = std::function<std::unique_ptr<AbstractGameManager>(bool verbose)>;
