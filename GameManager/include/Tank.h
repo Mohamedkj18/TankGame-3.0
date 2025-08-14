@@ -7,61 +7,64 @@
 #include "common/ActionRequest.h"
 #include "common/TankAlgorithm.h"
 
-class GameManager;
-// ========================= CLASS: Tank =========================
-
-class Tank : public GameObject
+namespace GameManager_212788293_212497127
 {
-private:
-    int playerId;
-    int artilleryShells;
-    int tankId;
-    int tankGlobalId;
-    bool destroyed;
-    int cantShoot;
-    int reverseCharge = 0;
-    bool reverseQueued = false;
-    bool reverseReady = false;
-    std::unique_ptr<TankAlgorithm> tankAlgorithm;
-    ActionRequest lastMove;
+    class GameManager;
+    // ========================= CLASS: Tank =========================
 
-public:
-    Tank(int x, int y, Direction dir, std::shared_ptr<GameManager> game, int playerId, int shells, int tankId, int tankGlobalId);
+    class Tank : public GameObject
+    {
+    private:
+        int playerId;
+        int artilleryShells;
+        int tankId;
+        int tankGlobalId;
+        bool destroyed;
+        int cantShoot;
+        int reverseCharge = 0;
+        bool reverseQueued = false;
+        bool reverseReady = false;
+        std::unique_ptr<TankAlgorithm> tankAlgorithm;
+        ActionRequest lastMove;
 
-    // Position and state
-    int getPlayerId();
-    int getTankId();
-    int getTankGlobalId();
-    ActionRequest getLastMove();
-    bool checkForAWall();
+    public:
+        Tank(int x, int y, Direction dir, std::shared_ptr<GameManager> game, int playerId, int shells, int tankId, int tankGlobalId);
 
-    // Movement
-    void moveBackwards();
-    void rotateTank(double angle);
-    void setDirection(std::string directionStr);
-    void setLastMove(ActionRequest currentMove);
-    TankAlgorithm *getTankAlgorithm();
-    void setTankAlgorithm(std::unique_ptr<TankAlgorithm> algorithm);
+        // Position and state
+        int getPlayerId();
+        int getTankId();
+        int getTankGlobalId();
+        ActionRequest getLastMove();
+        bool checkForAWall();
 
-    // Firing
-    void fire();
+        // Movement
+        void moveBackwards();
+        void rotateTank(double angle);
+        void setDirection(std::string directionStr);
+        void setLastMove(ActionRequest currentMove);
+        TankAlgorithm *getTankAlgorithm();
+        void setTankAlgorithm(std::unique_ptr<TankAlgorithm> algorithm);
 
-    // Damage
-    void hit();
+        // Firing
+        void fire();
 
-    // Shooting cooldown
-    void incrementCantShoot();
-    void resetCantShoot();
-    bool canShoot();
-    int getCantShoot();
+        // Damage
+        void hit();
 
-    // 🔁 Reverse state
-    bool isReverseQueued() const;
-    bool isReverseReady() const;
-    int getReverseCharge() const;
-    void queueReverse();
-    void incrementReverseCharge();
-    void resetReverseState();
-    void executeReverse();
-    void ignoreMove();
-};
+        // Shooting cooldown
+        void incrementCantShoot();
+        void resetCantShoot();
+        bool canShoot();
+        int getCantShoot();
+
+        // 🔁 Reverse state
+        bool isReverseQueued() const;
+        bool isReverseReady() const;
+        int getReverseCharge() const;
+        void queueReverse();
+        void incrementReverseCharge();
+        void resetReverseState();
+        void executeReverse();
+        void ignoreMove();
+    };
+}

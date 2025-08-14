@@ -36,12 +36,12 @@ std::vector<std::pair<int, int>> MyBattleInfo::getPath()
     return path;
 }
 
-void MyBattleInfo::setRole(std::unique_ptr<Role> &&newRole)
+void MyBattleInfo::setRole(std::unique_ptr<Algorithm_212788293_212497127::Role> &&newRole)
 {
     role = std::move(newRole);
 }
 
-const Role &MyBattleInfo::getRole() const
+const Algorithm_212788293_212497127::Role &MyBattleInfo::getRole() const
 {
     return *role;
 }
@@ -75,7 +75,7 @@ int MyBattleInfo::bijection(int x, int y) const
     return ((x + y) * (x + y + 1)) / 2 + y;
 }
 
-std::unique_ptr<Role> MyBattleInfo::extractRole()
+std::unique_ptr<Algorithm_212788293_212497127::Role> MyBattleInfo::extractRole()
 {
     return std::move(role); // Transfers ownership
 }

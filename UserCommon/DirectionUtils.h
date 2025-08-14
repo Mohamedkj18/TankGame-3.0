@@ -41,8 +41,6 @@ struct pair_hash
     }
 };
 
-
-
 Direction &operator+=(Direction &dir, double angle);
 
 // =========================== UTILS =============================
@@ -75,15 +73,14 @@ inline std::string to_string(ActionRequest action)
     }
 }
 
-
-
-class DirectionsUtils{
-    public:
-        static std::unordered_map<Direction, std::array<int, 2>> stringToIntDirection;
-        static std::unordered_map<std::string, Direction> stringToDirection;
-        static std::unordered_map<Direction, Direction> reverseDirection;
-        static std::unordered_map<std::string, double> stringToAngle;
-        static std::unordered_map<std::pair<int, int>, Direction, pair_hash> pairToDirections;
-        static std::unordered_map<Direction, std::string> directionToString;
-        static std::array<Direction, 8> directions;
+class DirectionsUtils
+{
+public:
+    static std::unordered_map<Direction, std::array<int, 2>> stringToIntDirection;
+    static std::unordered_map<std::string, Direction> stringToDirection;
+    static std::unordered_map<Direction, Direction> reverseDirection;
+    static std::unordered_map<std::string, double> stringToAngle;
+    static std::unordered_map<std::pair<int, int>, Direction, pair_hash> pairToDirections;
+    static std::unordered_map<Direction, std::string> directionToString;
+    static std::array<Direction, 8> directions;
 };

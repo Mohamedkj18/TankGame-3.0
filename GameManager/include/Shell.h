@@ -2,11 +2,14 @@
 
 #include "GameObject.h"
 
-// ========================= CLASS: Shell =========================
-
-class Shell : public GameObject
+namespace GameManager_212788293_212497127
 {
-public:
-    Shell(int x, int y, Direction dir, std::shared_ptr<GameManager> game);
-    bool checkForAWall();
-};
+    // ========================= CLASS: Shell =========================
+
+    class Shell : public GameObject
+    {
+    public:
+        Shell(int x, int y, Direction dir, std::shared_ptr<GameManager> game);
+        bool checkForAWall();
+    };
+}

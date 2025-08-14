@@ -9,7 +9,7 @@
 #include <memory>
 #include "common/BattleInfo.h"
 #include "DirectionUtils.h"
-// #include "Algorithms/Roles/Role.h"
+#include "Role.h"
 
 class Role;
 
@@ -18,7 +18,7 @@ class MyBattleInfo : public BattleInfo
 private:
     int width, height;
     int myX, myY;
-    std::unique_ptr<Role> role;
+    std::unique_ptr<Algorithm_212788293_212497127::Role> role;
     bool shouldKeepRole = false;
     std::set<int> friendlyTanks;
     std::set<int> enemyTanks;
@@ -53,8 +53,8 @@ public:
     std::vector<std::pair<int, int>> getPath();
     void setPath(const std::vector<std::pair<int, int>> &path);
 
-    void setRole(std::unique_ptr<Role> &&newRole);
-    const Role &getRole() const;
+    void setRole(std::unique_ptr<Algorithm_212788293_212497127::Role> &&newRole);
+    const Algorithm_212788293_212497127::Role &getRole() const;
 
     bool isMine(int x, int y) const;
     bool isWall(int x, int y) const;
@@ -65,7 +65,7 @@ public:
 
     int bijection(int x, int y) const;
 
-    std::unique_ptr<Role> extractRole();
+    std::unique_ptr<Algorithm_212788293_212497127::Role> extractRole();
     bool getShouldKeepRole() const { return shouldKeepRole; }
     void setShouldKeepRole(bool value) { shouldKeepRole = value; }
 

@@ -3,37 +3,40 @@
 #include "GameManager.h"
 #include "DirectionUtils.h"
 
-// ------------------------ MovingGameObject ------------------------
-
-GameObject::GameObject(int x, int y, Direction dir, std::shared_ptr<GameManager> game)
-    : x(x), y(y), direction(dir), game(std::move(game)) {}
-
-int GameObject::getX()
+namespace GameManager_212788293_212497127
 {
-    return x;
-}
+    // ------------------------ MovingGameObject ------------------------
 
-int GameObject::getY()
-{
-    return y;
-}
+    GameObject::GameObject(int x, int y, Direction dir, std::shared_ptr<GameManager> game)
+        : x(x), y(y), direction(dir), game(std::move(game)) {}
 
-bool GameObject::moveForward()
-{
-    updatePosition(direction);
-    if (checkForAWall())
+    int GameObject::getX()
     {
-
-        updatePosition(DirectionsUtils::reverseDirection[direction]);
-        return false;
+        return x;
     }
 
-    return true;
-}
+    int GameObject::getY()
+    {
+        return y;
+    }
 
-void GameObject::updatePosition(Direction dir)
-{
-    std::array<int, 2> d = DirectionsUtils::stringToIntDirection[dir];
-    x = (x + d[0] + game->getWidth() * 2) % (game->getWidth() * 2);
-    y = (y + d[1] + game->getHeight() * 2) % (game->getHeight() * 2);
+    bool GameObject::moveForward()
+    {
+        updatePosition(direction);
+        if (checkForAWall())
+        {
+
+            updatePosition(DirectionsUtils::reverseDirection[direction]);
+            return false;
+        }
+
+        return true;
+    }
+
+    void GameObject::updatePosition(Direction dir)
+    {
+        std::array<int, 2> d = DirectionsUtils::stringToIntDirection[dir];
+        x = (x + d[0] + game->getWidth() * 2) % (game->getWidth() * 2);
+        y = (y + d[1] + game->getHeight() * 2) % (game->getHeight() * 2);
+    }
 }
