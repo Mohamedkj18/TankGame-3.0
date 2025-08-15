@@ -86,7 +86,7 @@ public:
         }
     }
 
-    void initializeAlgoID();
+    void static initializeAlgoID();
     size_t getAlgoID();
 
     AlgorithmAndPlayerFactories &getPlayerAndAlgoFactory(size_t id)
