@@ -6,16 +6,36 @@
 #include "common/AbstractGameManager.h"
 #include "GameManagerRegistrar.h"
 #include "AlgorithmRegistrar.h"
-
+#include "include/InitialSatellite.h"
+#include <set>
+#include <utility>
+#include <fstream>
+#include <sstream>
+#include <stdexcept>
+#include <memory>
 
 struct GameArgs{
     size_t map_width,map_height,max_steps,num_shells;
-    SatelliteView& map;
-    std::string map_name, playerAndAlgoFactory1Name, playerAndAlgoFactory2Name
-    ,GameManagerName, player1Name, player2Name;
+    std::unique_ptr<SatelliteView> map;
+    std::string map_name ,GameManagerName,player1Name,player2Name;
+    size_t playerAndAlgoFactory1Name, playerAndAlgoFactory2Name;
 };
+
+
+struct ParsedMap {
+    size_t map_width{};
+    size_t map_height{};
+    size_t max_steps{};
+    size_t num_shells{};
+    std::set<std::pair<size_t, size_t>> player1tanks;
+    std::set<std::pair<size_t, size_t>> player2tanks;
+    std::set<std::pair<size_t, size_t>> mines;
+    std::set<std::pair<size_t, size_t>> walls;
+};
+
 
 class Mode{
 public:
-    virtual std::vector<GameArgs> getAllGames() =0;
+    virtual std::vector<GameArgs> getAllGames(std::vector<std::string> game_maps) =0;
+    ParsedMap parseBattlefieldFile(const std::string& filename);
 };

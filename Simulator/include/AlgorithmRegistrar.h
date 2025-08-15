@@ -6,6 +6,7 @@
 #include <cassert>
 #include "common/TankAlgorithm.h"
 #include "common/Player.h"
+#include <map>
 
 class AlgorithmRegistrar
 {
@@ -45,31 +46,35 @@ class AlgorithmRegistrar
             return tankAlgorithmFactory != nullptr;
         }
     };
-    std::unordered_map<std::string,AlgorithmAndPlayerFactories> algorithms;
+
+    
+    std::map<size_t,AlgorithmAndPlayerFactories> algorithms;
     static AlgorithmRegistrar registrar;
+    static size_t algoID;
+    
 
 public:
     static AlgorithmRegistrar &getAlgorithmRegistrar();
     void createAlgorithmFactoryEntry(const std::string &name)
     {
-        algorithms[name] = AlgorithmAndPlayerFactories(name);
+        algorithms[algoID] = AlgorithmAndPlayerFactories(name);
     }
-    void addPlayerFactoryToLastEntry(std::string so_name,PlayerFactory &&factory)
+    void addPlayerFactoryToLastEntry(PlayerFactory &&factory)
     {
-        algorithms[so_name].setPlayerFactory(std::move(factory));
+        algorithms[algoID].setPlayerFactory(std::move(factory));
     }
-    void addTankAlgorithmFactoryToLastEntry(std::string so_name,TankAlgorithmFactory &&factory)
+    void addTankAlgorithmFactoryToLastEntry(TankAlgorithmFactory &&factory)
     {
-        algorithms[so_name].setTankAlgorithmFactory(std::move(factory));
+        algorithms[algoID++].setTankAlgorithmFactory(std::move(factory));
     }
     struct BadRegistrationException
     {
         std::string name;
         bool hasName, hasPlayerFactory, hasTankAlgorithmFactory;
     };
-    void validateLastRegistration(std::string so_name)
+    void validateLastRegistration()
     {
-        const auto &last = algorithms[so_name];
+        const auto &last = algorithms[algoID-1];
         bool hasName = (last.name() != "");
         if (!hasName || !last.hasPlayerFactory() || !last.hasTankAlgorithmFactory())
         {
@@ -80,10 +85,25 @@ public:
                 last.hasTankAlgorithmFactory()};
         }
     }
-    
+
+    void initializeAlgoID();
+    size_t getAlgoID();
+
+    AlgorithmAndPlayerFactories &getPlayerAndAlgoFactory(size_t id)
+    {
+        if (algorithms.count(id) == 0) {
+            throw std::runtime_error("Algorithm ID not found: " + std::to_string(id));
+        }
+        return algorithms[id];
+    }
+
     auto begin() const
     {
         return algorithms.begin();
+    }
+    auto rbegin() const
+    {
+        return algorithms.rbegin();
     }
     auto end() const
     {

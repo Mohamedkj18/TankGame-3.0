@@ -4,6 +4,7 @@
 #include <functional>
 #include <stdexcept>
 #include <cassert>
+#include <map>
 #include "common/AbstractGameManager.h"
 
 class GameManagerRegistrar
@@ -31,7 +32,7 @@ public:
             return factory != nullptr;
         }
     };
-    std::unordered_map<std::string,GameManagerFactory> gameManagers;
+    std::map<std::string,GameManagerFactory> gameManagers;
     static GameManagerRegistrar registrar;
 
 public:
@@ -71,5 +72,16 @@ public:
             throw std::runtime_error("No game manager registrations to remove.");
         }
         gameManagers.erase(so_name);
+    }
+    auto begin() const
+    {
+        return gameManagers.begin();
+    }
+    auto rbegin() const
+    {
+        return gameManagers.rbegin();
+    }
+    auto end() const
+    {        return gameManagers.end();
     }
 };
