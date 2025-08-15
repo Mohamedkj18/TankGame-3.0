@@ -32,30 +32,50 @@ public:
             return factory != nullptr;
         }
     };
-    std::map<std::string,GameManagerFactory> gameManagers;
+    std::map<size_t,GameManagerFactory> gameManagers;
     static GameManagerRegistrar registrar;
+    static size_t GameManagerCount;
 
 public:
     static GameManagerRegistrar &getGameManagerRegistrar()
     {
         return registrar;
     }
+    static void initializeGameManagerCount()
+    {
+        GameManagerCount = 0;
+    }
+    size_t getGameManagerCount() const
+    {
+        return GameManagerCount;
+    }
+
+    GameManagerFactory &getGameManagerFactory(size_t id)
+    {
+        auto it = gameManagers.find(id);
+        if (it == gameManagers.end())
+        {
+            throw std::runtime_error("GameManager not found: " + std::to_string(id));
+        }
+        return it->second;
+    }
+
     void createGameManagerFactoryEntry(const std::string &name)
     {
-        gameManagers[name] = GameManagerFactory(name);
+        gameManagers[GameManagerCount] = GameManagerFactory(name);
     }
-    void addGameManagerFactoryToLastEntry(std::string so_name, std::function<std::unique_ptr<AbstractGameManager>(bool verbose)> &&factory)
+    void addGameManagerFactoryToLastEntry(std::function<std::unique_ptr<AbstractGameManager>(bool verbose)> &&factory)
     {
-        gameManagers[so_name].setFactory(std::move(factory));
+        gameManagers[GameManagerCount++].setFactory(std::move(factory));
     }
     struct BadRegistrationException
     {
         std::string name;
         bool hasName, hasFactory;
     };
-    void validateLastRegistration(std::string so_name)
+    void validateLastRegistration()
     {
-        const auto &last = gameManagers[so_name];
+        const auto &last = gameManagers[GameManagerCount - 1];
         bool hasName = (last.name() != "");
         if (!hasName || !last.hasFactory())
         {
@@ -65,13 +85,14 @@ public:
                 last.hasFactory()};
         }
     }
-    void removeLast(std::string so_name)
+    void removeLast()
     {
         if (gameManagers.empty())
         {
             throw std::runtime_error("No game manager registrations to remove.");
         }
-        gameManagers.erase(so_name);
+        gameManagers.erase(GameManagerCount - 1);
+        --GameManagerCount;
     }
     auto begin() const
     {

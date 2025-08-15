@@ -71,3 +71,5 @@ ParsedMap Mode::parseBattlefieldFile(const std::string& filename) {
 
     return result;
 }
+
+

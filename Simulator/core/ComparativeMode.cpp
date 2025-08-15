@@ -15,7 +15,9 @@ std::vector<GameArgs> ComparativeMode::getAllGames(std::vector<std::string> game
     // Iterate through all registered game managers
     struct ParsedMap parsedMap = parseBattlefieldFile(game_maps[0]);
     auto satellite = std::make_unique<InitialSatellite> (parsedMap.player1tanks, parsedMap.player2tanks, parsedMap.walls, parsedMap.mines);
-    for (const auto& [gameManagerName, gameManagerFactory] : gameManagerRegistrar.gameManagers) {
+    for (size_t i = 0; i < gameManagerRegistrar.getGameManagerCount(); ++i) {
+        if(gameManagerRegistrar.gameManagers.count(i)){
+        auto& gameManagerFactory = gameManagerRegistrar.gameManagers.at(i);
         if (gameManagerFactory.hasFactory()) 
             games.push_back({
                 parsedMap.map_width,
@@ -24,12 +26,12 @@ std::vector<GameArgs> ComparativeMode::getAllGames(std::vector<std::string> game
                 parsedMap.num_shells,
                 std::move(satellite), // Satellite view of the initial state
                 game_maps[0], // Map name
-                gameManagerName, // Game manager name
+                gameManagerFactory.name(), // Game manager name
                 player1Name, // Player 1 name
                 player2Name, // Player 2 name
                 factoryAndPlayer1Name, // Player 1 algorithm factory name
                 factoryAndPlayer2Name, 
             });
-        }
+        }}
     return games;
 }
