@@ -1,5 +1,7 @@
 
 #include "MyPlayer.h"
+#include "common/PlayerRegistration.h"
+
 
 namespace Algorithm_212788293_212497127
 {
@@ -201,7 +203,7 @@ namespace Algorithm_212788293_212497127
             for (size_t j = 0; j < playerGameWidth; ++j)
             {
                 char object = satellite_view.getObjectAt(j, i);
-                int id = bijection(j, i);
+                int id = UC::bijection(j, i);
                 lastSatellite[i][j] = object;
                 if (object == '%')
                 {
@@ -235,14 +237,14 @@ namespace Algorithm_212788293_212497127
 
         for (const auto &shellPos : shellsPositions)
         {
-            std::pair<int, int> shell = inverseBijection(shellPos);
+            std::pair<int, int> shell = UC::inverseBijection(shellPos);
             if (manhattanDistance(pos.first, pos.second, shell.first, shell.second) <= 3)
                 return true;
         }
 
         for (const auto &enemyId : enemies)
         {
-            std::pair<int, int> enemyPos = inverseBijection(enemyId);
+            std::pair<int, int> enemyPos = UC::inverseBijection(enemyId);
             if (manhattanDistance(x, y, enemyPos.first, enemyPos.second) <= 4)
                 return true;
         }
@@ -278,7 +280,7 @@ namespace Algorithm_212788293_212497127
                     tanksPlannedPaths[tankId] = {std::make_pair(j, i)};
                     tanksPlannedActions[tankId] = {ActionRequest::GetBattleInfo};
                     tanksRemainingShells[tankId] = num_shells;
-                    tanksDirection[tankId] = (player_index == 1) ? Direction::L : Direction::R;
+                    tanksDirection[tankId] = (player_index == 1) ? UC::Direction::L : UC::Direction::R;
                     tankId++;
                 }
             }
@@ -286,10 +288,10 @@ namespace Algorithm_212788293_212497127
         gotBattleInfo = true;
     }
 
-    Direction MyPlayer::updateTankDirection(int tankId)
+    UC::Direction MyPlayer::updateTankDirection(int tankId)
     {
 
-        Direction lastDir = tanksDirection[tankId];
+        UC::Direction lastDir = tanksDirection[tankId];
         for (auto action : tanksPlannedActions[tankId])
         {
             if (action == ActionRequest::RotateLeft45)
@@ -312,3 +314,4 @@ namespace Algorithm_212788293_212497127
         return lastDir;
     }
 }
+

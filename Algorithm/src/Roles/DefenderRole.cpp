@@ -1,7 +1,6 @@
 
-#include "DefenderRole.h"
+#include "Roles/DefenderRole.h"
 #include "MyTankAlgorithm.h"
-#include "DirectionUtils.h"
 
 namespace Algorithm_212788293_212497127
 {
@@ -9,14 +8,14 @@ namespace Algorithm_212788293_212497127
     {
         nextMoves.clear();
 
-        Direction currentDirection = algo.getCurrentDirection();
+        UC::Direction currentDirection = algo.getCurrentDirection();
         std::pair<int, int> myPos = algo.getCurrentPosition();
 
         // Look for visible enemy tanks within range 4 (Manhattan distance)
         std::optional<std::pair<int, int>> target = algo.findEnemyInRange(myPos, 6);
         if (target.has_value())
         {
-            Direction desiredDir = getDirectionFromPosition(myPos, target.value());
+            UC::Direction desiredDir = getDirectionFromPosition(myPos, target.value());
 
             if (desiredDir != currentDirection)
             {

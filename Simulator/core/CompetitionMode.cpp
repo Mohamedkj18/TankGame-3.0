@@ -1,4 +1,4 @@
-#include "include/CompetitionMode.h"
+#include "CompetitionMode.h"
 
 std::vector<GameArgs> CompetitionMode::getAllGames(std::vector<std::string> game_maps) {
     // This function retrieves all games for the competition mode based on the provided game maps.
@@ -7,9 +7,10 @@ std::vector<GameArgs> CompetitionMode::getAllGames(std::vector<std::string> game
     // Retrieve the game manager factory
     auto& gameManagerRegistrar = GameManagerRegistrar::getGameManagerRegistrar();
     auto& algorithmRegistrar = AlgorithmRegistrar::getAlgorithmRegistrar();
-
+    if(gameManagerRegistrar.gameManagers.empty()) {
+        throw std::runtime_error("No game managers registered.");
+    }
     std::string gameManagerName = gameManagerRegistrar.begin()->second.name();
-
     int algoCount = algorithmRegistrar.getAlgoID();
     // Iterate through all registered game managers
     for(int i=0; i<game_maps.size(); ++i) {
@@ -38,7 +39,8 @@ std::vector<GameArgs> CompetitionMode::getAllGames(std::vector<std::string> game
                 algorithmRegistrar.getPlayerAndAlgoFactory((size_t)(i+j+1)%(algoCount-1)).name(),
                 algorithmRegistrar.getPlayerAndAlgoFactory((size_t)j).name(),
                 (size_t)(i+j+1)%(algoCount-1),
-                 (size_t)j
+                 (size_t)j,
+                0
             });
         }
     }

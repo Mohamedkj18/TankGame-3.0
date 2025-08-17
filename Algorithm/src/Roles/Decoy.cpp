@@ -1,6 +1,5 @@
-#include "DecoyRole.h"
+#include "Roles/DecoyRole.h"
 #include "MyTankAlgorithm.h"
-#include "DirectionUtils.h"
 
 namespace Algorithm_212788293_212497127
 {
@@ -45,7 +44,7 @@ namespace Algorithm_212788293_212497127
     std::vector<ActionRequest> DecoyRole::getNextMoves(std::vector<std::pair<int, int>> path, TankAlgorithm_212788293_212497127 &algo)
     {
         std::pair<int, int> pos = algo.getCurrentPosition();
-        Direction currentDirection = algo.getCurrentDirection();
+        UC::Direction currentDirection = algo.getCurrentDirection();
         int maxMovesPerUpdate = algo.getMaxMovesPerUpdate();
         int step = 0;
 
@@ -55,7 +54,7 @@ namespace Algorithm_212788293_212497127
                 break;
 
             // Determine the direction to this path step
-            Direction desiredDir = getDirectionFromPosition(pos, pathStep);
+            UC::Direction desiredDir = getDirectionFromPosition(pos, pathStep);
 
             // If not facing desired direction, rotate first
             if (currentDirection != desiredDir)

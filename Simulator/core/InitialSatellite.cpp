@@ -1,4 +1,4 @@
-#include "include/InitialSatellite.h"
+#include "InitialSatellite.h"
 
 char InitialSatellite::getObjectAt(size_t x, size_t y) const {
     if (player1Tanks.count({x, y})) return '1'; // Player 1 tank

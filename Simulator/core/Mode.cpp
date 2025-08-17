@@ -1,4 +1,4 @@
-#include "include/Mode.h"
+#include "Mode.h"
 
 
 ParsedMap Mode::parseBattlefieldFile(const std::string& filename) {

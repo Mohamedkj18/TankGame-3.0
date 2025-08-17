@@ -1,17 +1,16 @@
 #pragma once
 
 #include "common/Player.h"
-#include "MySatelliteView.h"
 #include <algorithm>
 #include <unordered_set>
-#include "ChaserRole.h"
-#include "DecoyRole.h"
-#include "EvasiorRole.h"
-#include "SniperRole.h"
-#include "DefenderRole.h"
+#include "Roles/ChaserRole.h"
+#include "Roles/DecoyRole.h"
+#include "Roles/EvasiorRole.h"
+#include "Roles/SniperRole.h"
+#include "Roles/DefenderRole.h"
 #include "MyBattleInfo.h"
 #include "MyTankAlgorithm.h"
-#include "DirectionUtils.h"
+#include "UserCommon/DirectionUtils.h"
 #include <unordered_map>
 #include <vector>
 #include <string>
@@ -43,7 +42,7 @@ namespace Algorithm_212788293_212497127
         std::unordered_map<int, std::vector<ActionRequest>> tanksPlannedActions;
         std::unordered_map<int, std::pair<int, int>> tankPositions;
         std::unordered_map<int, int> tanksRemainingShells;
-        std::unordered_map<int, Direction> tanksDirection;
+        std::unordered_map<int, UC::Direction> tanksDirection;
         std::unordered_map<int, std::string> tankRoles;
         std::vector<std::vector<char>> lastSatellite;
 
@@ -74,7 +73,7 @@ namespace Algorithm_212788293_212497127
 
     private:
         bool gotBattleInfo = false;
-        Direction updateTankDirection(int tankId);
+        UC::Direction updateTankDirection(int tankId);
         std::pair<int, int> prepareInfoForBattleInfo(std::set<int> &mines, std::set<int> &walls, std::set<int> &shells, std::set<int> &friendlyTanks, std::set<int> &enemyTanks, SatelliteView &satellite_view);
     };
 

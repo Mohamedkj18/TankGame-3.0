@@ -1,6 +1,9 @@
 #pragma once
 #include <memory>
-#include "DirectionUtils.h"
+#include "UserCommon/DirectionUtils.h"
+
+namespace UC = UserCommon_212788293_212497127;
+
 
 namespace GameManager_212788293_212497127
 {
@@ -11,18 +14,18 @@ namespace GameManager_212788293_212497127
     protected:
         int x;
         int y;
-        Direction direction;
-        std::shared_ptr<GameManager_212788293_212497127::GameManager> game;
+        UC::Direction direction;
+        GameManager_212788293_212497127::GameManager* game;
 
     public:
-        GameObject(int x, int y, Direction dir, std::shared_ptr<GameManager> game);
+        GameObject(int x, int y, UC::Direction dir, GameManager* game);
         int getX();
         int getY();
         virtual ~GameObject() = default;
 
-        Direction getDirection() { return direction; }
+        UC::Direction getDirection() { return direction; }
         virtual bool checkForAWall() = 0;
         bool moveForward();
-        void updatePosition(Direction dir);
+        void updatePosition(UC::Direction dir);
     };
 }

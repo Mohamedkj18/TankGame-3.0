@@ -24,17 +24,12 @@ return entry.createPlayer(player_index, x, y, max_steps, num_shells); // unique_
 
 
 
-struct RanGame {
-    std::string gm_name;
-    std::string map_name;
-    size_t algo1_id, algo2_id;
-    GameResult result;
-};
+
 
 static RanGame run_single_game(const GameArgs& g, bool verbose) {
     // 1) GameManager by name
     auto& gmReg = GameManagerRegistrar::getGameManagerRegistrar();
-    auto it = gmReg.gameManagers.find(g.GameManagerName);
+    auto it = gmReg.gameManagers.find(g.GameManagerID);
     if (it == gmReg.gameManagers.end() || !it->second.hasFactory()) {
         throw std::runtime_error("GameManager not found or not loadable: " + g.GameManagerName);
     }

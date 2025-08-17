@@ -1,12 +1,10 @@
 #pragma once
 
-#include "UserCommon/MyBattleInfo.h"
-#include "common/TankAlgorithmRegistration.h"
+#include "MyBattleInfo.h"
 #include "common/TankAlgorithm.h"
-#include "common/ActionRequest.h"
 #include "common/BattleInfo.h"
 #include "MyPlayer.h"
-#include "Role.h"
+#include "Roles/Role.h"
 #include <vector>
 #include <string>
 #include <algorithm>
@@ -41,17 +39,17 @@ namespace Algorithm_212788293_212497127
         bool movePending;
         int gameWidth;
         int gameHeight;
-        Direction currentDirection;
+        UC::Direction currentDirection;
         std::pair<int, int> currentPos;
 
     public:
-        TankAlgorithm_212788293_212497127(int player_index, int tank_index, int numMovesPerUpdate, int range, Direction initialDirection);
+        TankAlgorithm_212788293_212497127(int player_index, int tank_index);
 
         ActionRequest getAction() override;
         void updateBattleInfo(BattleInfo &info) override;
 
         // Execution logic
-        std::pair<int, int> move(std::pair<int, int> current, Direction direction);
+        std::pair<int, int> move(std::pair<int, int> current, UC::Direction direction);
         std::string getDirectionFromPosition(std::pair<int, int> current, std::pair<int, int> target);
         int rotateTowards(std::string desiredDir, int step);
         double getAngleFromDirections(const std::string &directionStr, const std::string &desiredDir);
@@ -61,19 +59,19 @@ namespace Algorithm_212788293_212497127
         bool isSquareValid(int x, int y, std::set<std::pair<int, int>> cellsToAvoid);
         std::pair<int, int> findFirstLegalLocationToFlee(std::pair<int, int> from, std::set<std::pair<int, int>> redZone);
         std::pair<int, int> getTargetForTank();
-        std::pair<int, int> moveTank(std::pair<int, int> pos, Direction dir);
+        std::pair<int, int> moveTank(std::pair<int, int> pos, UC::Direction dir);
         std::set<std::pair<int, int>> getBannedPositionsForTank() { return bannedPositionsForTank; };
         std::set<std::pair<int, int>> getShells();
         bool isThreatAhead();
         bool isFriendlyTooClose();
-        bool shouldShoot(Direction currDir, std::pair<int, int> currPos);
+        bool shouldShoot(UC::Direction currDir, std::pair<int, int> currPos);
         void setTankId(int id) { tankId = id; };
         int getTankId() const { return tankId; };
         void setPlayerId(int id) { playerId = id; };
         int getPlayerId() const { return playerId; };
         std::set<int> getEnemyTanks() { return threats; };
-        Direction getCurrentDirection() const { return currentDirection; }
-        void setCurrentDirection(Direction dir) { currentDirection = dir; }
+        UC::Direction getCurrentDirection() const { return currentDirection; }
+        void setCurrentDirection(UC::Direction dir) { currentDirection = dir; }
 
         std::pair<int, int> getCurrentPosition() const { return currentPos; }
         void setCurrentPosition(std::pair<int, int> pos) { currentPos = pos; }

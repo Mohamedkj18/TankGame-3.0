@@ -10,10 +10,9 @@
 #include <vector>
 #include <fstream>
 #include <atomic>
+#include "common/AbstractGameManager.h"
 
-#include "AbstractGameManager.h"
-#include "DirectionUtils.h"
-#include "common/GameManagerRegistration.h"
+class MySatelliteView;
 
 namespace GameManager_212788293_212497127
 {

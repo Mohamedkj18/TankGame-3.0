@@ -7,8 +7,8 @@ namespace GameManager_212788293_212497127
 {
     // ------------------------ MovingGameObject ------------------------
 
-    GameObject::GameObject(int x, int y, Direction dir, std::shared_ptr<GameManager> game)
-        : x(x), y(y), direction(dir), game(std::move(game)) {}
+    GameObject::GameObject(int x, int y, UC::Direction dir, GameManager* game)
+        : x(x), y(y), direction(dir), game(game) {}
 
     int GameObject::getX()
     {
@@ -26,16 +26,16 @@ namespace GameManager_212788293_212497127
         if (checkForAWall())
         {
 
-            updatePosition(DirectionsUtils::reverseDirection[direction]);
+            updatePosition(UC::DirectionsUtils::reverseDirection[direction]);
             return false;
         }
 
         return true;
     }
 
-    void GameObject::updatePosition(Direction dir)
+    void GameObject::updatePosition(UC::Direction dir)
     {
-        std::array<int, 2> d = DirectionsUtils::stringToIntDirection[dir];
+        std::array<int, 2> d = UC::DirectionsUtils::stringToIntDirection[dir];
         x = (x + d[0] + game->getWidth() * 2) % (game->getWidth() * 2);
         y = (y + d[1] + game->getHeight() * 2) % (game->getHeight() * 2);
     }

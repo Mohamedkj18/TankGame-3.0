@@ -1,5 +1,5 @@
 #include "MyBattleInfo.h"
-
+namespace Algorithm_212788293_212497127 {
 MyBattleInfo::MyBattleInfo(int width, int height,
                            const std::set<int> &friendlyTanks,
                            const std::set<int> &enemyTanks,
@@ -47,35 +47,32 @@ const Algorithm_212788293_212497127::Role &MyBattleInfo::getRole() const
 }
 bool MyBattleInfo::isMine(int x, int y) const
 {
-    return mines.count(bijection(x, y)) > 0;
+    return mines.count(UC::bijection(x, y)) > 0;
 }
 
 bool MyBattleInfo::isWall(int x, int y) const
 {
-    return walls.count(bijection(x, y)) > 0;
+    return walls.count(UC::bijection(x, y)) > 0;
 }
 
 bool MyBattleInfo::isShell(int x, int y) const
 {
-    return shells.count(bijection(x, y)) > 0;
+    return shells.count(UC::bijection(x, y)) > 0;
 }
 
 bool MyBattleInfo::isEnemyTank(int x, int y) const
 {
-    return enemyTanks.count(bijection(x, y)) > 0;
+    return enemyTanks.count(UC::bijection(x, y)) > 0;
 }
 
 bool MyBattleInfo::isFriendlyTank(int x, int y) const
 {
-    return friendlyTanks.count(bijection(x, y)) > 0;
+    return friendlyTanks.count(UC::bijection(x, y)) > 0;
 }
 
-int MyBattleInfo::bijection(int x, int y) const
-{
-    return ((x + y) * (x + y + 1)) / 2 + y;
-}
 
 std::unique_ptr<Algorithm_212788293_212497127::Role> MyBattleInfo::extractRole()
 {
     return std::move(role); // Transfers ownership
+}
 }

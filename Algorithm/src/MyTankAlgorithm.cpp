@@ -1,16 +1,20 @@
 #include <queue>
 #include <memory>
 #include "MyTankAlgorithm.h"
-#include "DirectionUtils.h"
-#include "ChaserRole.h"
+#include "Roles/ChaserRole.h"
+#include "common/TankAlgorithmRegistration.h"
 
 namespace Algorithm_212788293_212497127
 {
 
     REGISTER_TANK_ALGORITHM(TankAlgorithm_212788293_212497127);
 
-    TankAlgorithm_212788293_212497127::TankAlgorithm_212788293_212497127(int player_index, int tank_index, int numMovesPerUpdate, int range, Direction initialDirection)
-        : moveIndex(0), tankId(tank_index), playerId(player_index), currentDirection(initialDirection), range(range), maxMovesPerUpdate(numMovesPerUpdate) {}
+    TankAlgorithm_212788293_212497127::TankAlgorithm_212788293_212497127(int player_index, int tank_index)
+        : moveIndex(0), tankId(tank_index), playerId(player_index) {
+            maxMovesPerUpdate = 5;
+            range = 7;
+            currentDirection = UC::Direction::U;
+        }
 
     void TankAlgorithm_212788293_212497127::updateBattleInfo(BattleInfo &info)
     {
@@ -46,39 +50,39 @@ namespace Algorithm_212788293_212497127
         return role->getNextAction();
     }
 
-    std::pair<int, int> TankAlgorithm_212788293_212497127::move(std::pair<int, int> pos, Direction dir)
+    std::pair<int, int> TankAlgorithm_212788293_212497127::move(std::pair<int, int> pos, UC::Direction dir)
     {
-        auto offset = DirectionsUtils::stringToIntDirection[dir];
+        auto offset = UC::DirectionsUtils::stringToIntDirection[dir];
         return {(pos.first + offset[0] + gameWidth) % gameWidth, (pos.second + offset[1] + gameHeight) % gameHeight};
     }
 
     bool TankAlgorithm_212788293_212497127::isThreatAhead()
     {
         std::pair<int, int> front = move(currentPos, currentDirection);
-        int id = bijection(front.first, front.second);
+        int id = UC::bijection(front.first, front.second);
         return threats.count(id) > 0;
     }
 
     bool TankAlgorithm_212788293_212497127::isFriendlyTooClose()
     {
-        for (Direction d : DirectionsUtils::directions)
+        for (UC::Direction d : UC::DirectionsUtils::directions)
         {
             std::pair<int, int> adj = move(currentPos, d);
-            int id = bijection(adj.first, adj.second);
+            int id = UC::bijection(adj.first, adj.second);
             if (nearbyFriendlies.count(id))
                 return true;
         }
         return false;
     }
 
-    bool TankAlgorithm_212788293_212497127::shouldShoot(Direction currDir, std::pair<int, int> currPos)
+    bool TankAlgorithm_212788293_212497127::shouldShoot(UC::Direction currDir, std::pair<int, int> currPos)
     {
         std::pair<int, int> look = currentPos;
         for (int i = 1; i < range + 1; ++i)
         {
-            look = {(currPos.first + DirectionsUtils::stringToIntDirection[currDir][0] * i + gameWidth) % gameWidth,
-                    (currPos.second + DirectionsUtils::stringToIntDirection[currDir][1] * i + gameHeight) % gameHeight};
-            int id = bijection(look.first, look.second);
+            look = {(currPos.first + UC::DirectionsUtils::stringToIntDirection[currDir][0] * i + gameWidth) % gameWidth,
+                    (currPos.second + UC::DirectionsUtils::stringToIntDirection[currDir][1] * i + gameHeight) % gameHeight};
+            int id = UC::bijection(look.first, look.second);
             if (nearbyFriendlies.count(id))
                 return false; // don't friendly fire
             if (threats.count(id) || walls.count(id))
@@ -92,7 +96,7 @@ namespace Algorithm_212788293_212497127
         if (x < 0 || y < 0 || x >= static_cast<int>(gameWidth) || y >= static_cast<int>(gameHeight))
             return false;
 
-        int pos = bijection(x, y);
+        int pos = UC::bijection(x, y);
         if (mines.count(pos) > 0 || walls.count(pos) > 0 || cellsToAvoid.count(std::make_pair(x, y)))
             return false;
 
@@ -108,7 +112,7 @@ namespace Algorithm_212788293_212497127
         {
             for (const auto &enemy : threats)
             {
-                std::pair<int, int> enemyPos = inverseBijection(enemy);
+                std::pair<int, int> enemyPos = UC::inverseBijection(enemy);
                 if (manhattanDistance(pos.first, pos.second, enemyPos.first, enemyPos.second) <= 1)
                     return true;
             }
@@ -118,8 +122,8 @@ namespace Algorithm_212788293_212497127
         auto isSafe = [&](const Pos &pos) -> bool
         {
             return redZone.count(pos) == 0 &&
-                   mines.count(bijection(pos.first, pos.second)) == 0 &&
-                   walls.count(bijection(pos.first, pos.second)) == 0 &&
+                   mines.count(UC::bijection(pos.first, pos.second)) == 0 &&
+                   walls.count(UC::bijection(pos.first, pos.second)) == 0 &&
                    !isAdjacentToEnemy(pos);
         };
 
@@ -137,10 +141,10 @@ namespace Algorithm_212788293_212497127
             if (pos != from && cost >= 5 && isSafe(pos))
                 return pos;
 
-            for (const auto &dir : DirectionsUtils::directions)
+            for (const auto &dir : UC::DirectionsUtils::directions)
             {
-                int nx = (pos.first + DirectionsUtils::stringToIntDirection[dir][0] + gameWidth) % gameWidth;
-                int ny = (pos.second + DirectionsUtils::stringToIntDirection[dir][1] + gameHeight) % gameHeight;
+                int nx = (pos.first + UC::DirectionsUtils::stringToIntDirection[dir][0] + gameWidth) % gameWidth;
+                int ny = (pos.second + UC::DirectionsUtils::stringToIntDirection[dir][1] + gameHeight) % gameHeight;
                 Pos next = {nx, ny};
 
                 if (visited.count(next))
@@ -156,9 +160,9 @@ namespace Algorithm_212788293_212497127
         return std::make_pair(-1, -1);
     }
 
-    std::pair<int, int> TankAlgorithm_212788293_212497127::moveTank(std::pair<int, int> pos, Direction dir)
+    std::pair<int, int> TankAlgorithm_212788293_212497127::moveTank(std::pair<int, int> pos, UC::Direction dir)
     {
-        auto offset = DirectionsUtils::stringToIntDirection[dir];
+        auto offset = UC::DirectionsUtils::stringToIntDirection[dir];
         return {
             (pos.first + offset[0] + static_cast<int>(gameWidth)) % static_cast<int>(gameWidth),
             (pos.second + offset[1] + static_cast<int>(gameHeight)) % static_cast<int>(gameHeight)};
@@ -175,7 +179,7 @@ namespace Algorithm_212788293_212497127
         {
             for (int x = 0; x < static_cast<int>(gameWidth); ++x)
             {
-                int pos = bijection(x, y);
+                int pos = UC::bijection(x, y);
                 if (threats.count(pos) > 0)
                 {
                     int dist = manhattanDistance(myPos.first, myPos.second, x, y);
@@ -194,8 +198,8 @@ namespace Algorithm_212788293_212497127
     std::vector<std::pair<int, int>> TankAlgorithm_212788293_212497127::getPath(std::pair<int, int> start, std::pair<int, int> target, std::set<std::pair<int, int>> avoidCells)
     {
         std::queue<std::pair<int, int>> queue;
-        std::unordered_map<std::pair<int, int>, bool, pair_hash> visited;
-        std::unordered_map<std::pair<int, int>, std::pair<int, int>, pair_hash> parent;
+        std::unordered_map<std::pair<int, int>, bool, UC::pair_hash> visited;
+        std::unordered_map<std::pair<int, int>, std::pair<int, int>, UC::pair_hash> parent;
 
         queue.push(start);
         visited[start] = true;
@@ -218,7 +222,7 @@ namespace Algorithm_212788293_212497127
                 return path;
             }
 
-            for (const auto &dir : DirectionsUtils::directions)
+            for (const auto &dir : UC::DirectionsUtils::directions)
             {
                 auto next = moveTank(current, dir);
                 if (!visited[next] && isSquareValid(next.first, next.second, avoidCells))
@@ -254,7 +258,7 @@ namespace Algorithm_212788293_212497127
                 int nx = (x + dx + gameWidth) % gameWidth;
                 int ny = (y + dy + gameHeight) % gameHeight;
 
-                if (walls.count(bijection(nx, ny)) > 0)
+                if (walls.count(UC::bijection(nx, ny)) > 0)
                     wallCount++;
             }
         }
@@ -270,7 +274,7 @@ namespace Algorithm_212788293_212497127
             {
                 int x = (i + gameWidth) % gameWidth;
                 int y = (j + gameHeight) % gameHeight;
-                int pos = bijection(x, y);
+                int pos = UC::bijection(x, y);
 
                 if (threats.count(pos) > 0)
                 {
@@ -289,9 +293,9 @@ namespace Algorithm_212788293_212497127
 
         for (int id : nearbyFriendlies)
         {
-            if (id == bijection(from.first, from.second))
+            if (id == UC::bijection(from.first, from.second))
                 continue;
-            std::pair<int, int> pos = inverseBijection(id);
+            std::pair<int, int> pos = UC::inverseBijection(id);
             size_t pathLength = getPath(from, pos, bannedPositionsForTank).size();
 
             if (pathLength < (size_t)minPath)
@@ -320,9 +324,9 @@ namespace Algorithm_212788293_212497127
             for (int j = 1; j <= range; ++j)
             {
 
-                int x = (position.first + DirectionsUtils::stringToIntDirection[DirectionsUtils::directions[i]][0] * j + gameWidth * j) % gameWidth;
-                int y = (position.second + DirectionsUtils::stringToIntDirection[DirectionsUtils::directions[i]][1] * j + gameHeight * j) % gameHeight;
-                int pos = bijection(x, y);
+                int x = (position.first + UC::DirectionsUtils::stringToIntDirection[UC::DirectionsUtils::directions[i]][0] * j + gameWidth * j) % gameWidth;
+                int y = (position.second + UC::DirectionsUtils::stringToIntDirection[UC::DirectionsUtils::directions[i]][1] * j + gameHeight * j) % gameHeight;
+                int pos = UC::bijection(x, y);
 
                 if (threats.count(pos) > 0)
                 {
@@ -338,7 +342,7 @@ namespace Algorithm_212788293_212497127
         std::set<std::pair<int, int>> shellsXY;
         for (const auto pos : shells)
         {
-            shellsXY.insert(inverseBijection(pos));
+            shellsXY.insert(UC::inverseBijection(pos));
         }
         return shellsXY;
     }
@@ -350,7 +354,7 @@ namespace Algorithm_212788293_212497127
         int dist, minDist = INT_MAX;
         for (auto &wall : walls)
         {
-            std::pair<int, int> wallPos = inverseBijection(wall);
+            std::pair<int, int> wallPos = UC::inverseBijection(wall);
             dist = manhattanDistance(pos.first, pos.second, wallPos.first, wallPos.second);
 
             if (dist < minDist)
@@ -363,3 +367,5 @@ namespace Algorithm_212788293_212497127
         return closestWall;
     }
 }
+
+

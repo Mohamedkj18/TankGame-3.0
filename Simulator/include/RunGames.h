@@ -1,9 +1,10 @@
+#pragma once
 
-#include "include/Mode.h"
-#include "include/ComparativeMode.h"
-#include "include/CompetitionMode.h"
-#include "include/GameManagerRegistrar.h"
-#include "include/AlgorithmRegistrar.h"
+#include "Mode.h"
+#include "ComparativeMode.h"
+#include "CompetitionMode.h"
+#include "GameManagerRegistrar.h"
+#include "AlgorithmRegistrar.h"
 #include "common/GameResult.h"
 
 struct RanGame {

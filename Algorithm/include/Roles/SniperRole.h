@@ -1,6 +1,5 @@
 #pragma once
 #include "Role.h"
-#include "MyTankAlgorithm.h"
 
 namespace Algorithm_212788293_212497127
 {

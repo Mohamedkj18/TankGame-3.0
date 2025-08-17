@@ -1,4 +1,4 @@
-#include "EvasiorRole.h"
+#include "Roles/EvasiorRole.h"
 #include "MyTankAlgorithm.h"
 
 namespace Algorithm_212788293_212497127
@@ -48,7 +48,7 @@ namespace Algorithm_212788293_212497127
     std::vector<ActionRequest> EvasiorRole::getNextMoves(std::vector<std::pair<int, int>> path, TankAlgorithm_212788293_212497127 &algo)
     {
         std::pair<int, int> pos = algo.getCurrentPosition();
-        Direction currentDirection = algo.getCurrentDirection();
+        UC::Direction currentDirection = algo.getCurrentDirection();
         int step = 0;
 
         for (const auto &pathStep : path)
@@ -57,7 +57,7 @@ namespace Algorithm_212788293_212497127
                 break;
 
             // Determine the direction to this path step
-            Direction desiredDir = getDirectionFromPosition(pos, pathStep);
+            UC::Direction desiredDir = getDirectionFromPosition(pos, pathStep);
 
             // If not facing desired direction, rotate first
             if (currentDirection != desiredDir)
@@ -94,7 +94,7 @@ namespace Algorithm_212788293_212497127
         std::set<std::pair<int, int>> pairsSet;
         for (const auto pos : toBeTransformed)
         {
-            pairsSet.insert(inverseBijection(pos));
+            pairsSet.insert(UC::inverseBijection(pos));
         }
         return pairsSet;
     }

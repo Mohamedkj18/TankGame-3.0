@@ -1,9 +1,9 @@
-#include "Role.h"
+#include "Roles/Role.h"
 #include "MyTankAlgorithm.h"
 
 namespace Algorithm_212788293_212497127
 {
-    int Role::rotateTowards(Direction &currentDirection, Direction desiredDir, int step)
+    int Role::rotateTowards(UC::Direction &currentDirection, UC::Direction desiredDir, int step)
     {
         double angle = getAngleFromDirections(currentDirection, desiredDir);
 
@@ -51,7 +51,7 @@ namespace Algorithm_212788293_212497127
         return ++step;
     }
 
-    Direction Role::getDirectionFromPosition(std::pair<int, int> current, std::pair<int, int> target)
+    UC::Direction Role::getDirectionFromPosition(std::pair<int, int> current, std::pair<int, int> target)
     {
         // int xDiff = target.first - current.first;
         // xDiff = xDiff > 1 || xDiff == -1 ? -1 : (xDiff + gameWidth) % gameWidth;
@@ -76,12 +76,12 @@ namespace Algorithm_212788293_212497127
         dx = (dx == 0) ? 0 : (dx > 0 ? 1 : -1);
         dy = (dy == 0) ? 0 : (dy > 0 ? 1 : -1);
 
-        return DirectionsUtils::pairToDirections[{dx, dy}];
+        return UC::DirectionsUtils::pairToDirections[{dx, dy}];
     }
 
-    double Role::getAngleFromDirections(Direction &orgDir, Direction &desiredDir)
+    double Role::getAngleFromDirections(UC::Direction &orgDir, UC::Direction &desiredDir)
     {
-        Direction dirToCheck;
+        UC::Direction dirToCheck;
         double angle, rotate = 0.125;
         for (int i = 0; i < 8; ++i)
         {

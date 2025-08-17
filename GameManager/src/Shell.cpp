@@ -8,7 +8,7 @@ namespace GameManager_212788293_212497127
 {
     // ------------------------ Shell ------------------------
 
-    Shell::Shell(int x, int y, Direction dir, std::shared_ptr<GameManager> game)
+    Shell::Shell(int x, int y, UC::Direction dir, GameManager* game)
         : GameObject(x, y, dir, game) {}
 
     bool Shell::checkForAWall()

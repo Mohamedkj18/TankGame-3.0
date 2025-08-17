@@ -1,5 +1,6 @@
 #pragma once
-#include "SatelliteView.h"
+#include "common/SatelliteView.h"
+#include "UserCommon/DirectionUtils.h"
 #include "Tank.h"
 #include "Shell.h"
 #include "GameManager.h"
@@ -7,6 +8,9 @@
 #include <map>
 #include <set>
 #include <cstddef>
+
+namespace UC = UserCommon_212788293_212497127;
+
 namespace GameManager_212788293_212497127
 {
     class MySatelliteView : public SatelliteView

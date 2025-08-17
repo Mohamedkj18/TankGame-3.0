@@ -4,7 +4,6 @@
 #include <set>
 #include "GameObject.h"
 #include "GameManager.h"
-#include "common/ActionRequest.h"
 #include "common/TankAlgorithm.h"
 
 namespace GameManager_212788293_212497127
@@ -28,7 +27,7 @@ namespace GameManager_212788293_212497127
         ActionRequest lastMove;
 
     public:
-        Tank(int x, int y, Direction dir, std::shared_ptr<GameManager> game, int playerId, int shells, int tankId, int tankGlobalId);
+        Tank(int x, int y, UC::Direction dir, GameManager* game, int playerId, int shells, int tankId, int tankGlobalId);
 
         // Position and state
         int getPlayerId();

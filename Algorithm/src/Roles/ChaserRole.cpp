@@ -1,4 +1,4 @@
-#include "ChaserRole.h"
+#include "Roles/ChaserRole.h"
 #include "MyTankAlgorithm.h"
 
 namespace Algorithm_212788293_212497127
@@ -8,7 +8,7 @@ namespace Algorithm_212788293_212497127
         nextMoves.clear();
 
         std::pair<int, int> myPos = algo.getCurrentPosition();
-        Direction currentDirection = algo.getCurrentDirection();
+        UC::Direction currentDirection = algo.getCurrentDirection();
         std::pair<int, int> target = algo.getTargetForTank();
         std::vector<std::pair<int, int>> path = algo.getPath(myPos, target, algo.getBannedPositionsForTank());
         algo.setBFSPath(path);
@@ -16,7 +16,7 @@ namespace Algorithm_212788293_212497127
         if (path.empty())
         {
             target = algo.attackWall(myPos);
-            Direction desiredDir = getDirectionFromPosition(myPos, target);
+            UC::Direction desiredDir = getDirectionFromPosition(myPos, target);
             rotateTowards(currentDirection, desiredDir, 0);
             if (algo.shouldShoot(desiredDir, myPos))
             {
@@ -35,7 +35,7 @@ namespace Algorithm_212788293_212497127
                 break;
 
             // Determine the direction to this path step
-            Direction desiredDir = getDirectionFromPosition(currentPos, pathStep);
+            UC::Direction desiredDir = getDirectionFromPosition(currentPos, pathStep);
 
             // If not facing desired direction, rotate first
             if (currentDirection != desiredDir)

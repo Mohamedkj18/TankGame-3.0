@@ -9,7 +9,7 @@ namespace GameManager_212788293_212497127
     class Shell : public GameObject
     {
     public:
-        Shell(int x, int y, Direction dir, std::shared_ptr<GameManager> game);
+        Shell(int x, int y, UC::Direction dir, GameManager* game);
         bool checkForAWall();
     };
 }

@@ -1,4 +1,4 @@
-#include "include/ComparativeMode.h"
+#include "ComparativeMode.h"
 
 
 std::vector<GameArgs> ComparativeMode::getAllGames(std::vector<std::string> game_maps) {
@@ -30,7 +30,8 @@ std::vector<GameArgs> ComparativeMode::getAllGames(std::vector<std::string> game
                 player1Name, // Player 1 name
                 player2Name, // Player 2 name
                 factoryAndPlayer1Name, // Player 1 algorithm factory name
-                factoryAndPlayer2Name, 
+                factoryAndPlayer2Name,
+                i // Game manager ID 
             });
         }}
     return games;

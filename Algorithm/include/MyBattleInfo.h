@@ -8,8 +8,9 @@
 #include <string>
 #include <memory>
 #include "common/BattleInfo.h"
-#include "DirectionUtils.h"
-#include "Role.h"
+#include "Roles/Role.h"
+
+namespace Algorithm_212788293_212497127 {
 
 class Role;
 
@@ -63,7 +64,6 @@ public:
     bool isEnemyTank(int x, int y) const;
     bool isFriendlyTank(int x, int y) const;
 
-    int bijection(int x, int y) const;
 
     std::unique_ptr<Algorithm_212788293_212497127::Role> extractRole();
     bool getShouldKeepRole() const { return shouldKeepRole; }
@@ -75,5 +75,5 @@ public:
     std::set<std::pair<int, int>> getPlannedPositions() { return plannedPositions; }
     void setPlannedPositions(std::set<std::pair<int, int>> positions) { plannedPositions = positions; }
 };
-
+}
 #endif

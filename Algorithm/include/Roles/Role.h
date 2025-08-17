@@ -1,10 +1,12 @@
 #pragma once
 
-#include "ActionRequest.h"
-#include "DirectionUtils.h"
+#include "UserCommon/DirectionUtils.h"
 #include <string>
 #include <set>
 #include <memory>
+
+class TankAlgorithm;
+namespace UC = UserCommon_212788293_212497127;
 
 namespace Algorithm_212788293_212497127
 {
@@ -30,8 +32,8 @@ namespace Algorithm_212788293_212497127
         int gameWidth;
         int gameHeight;
 
-        int rotateTowards(Direction &currentDirection, Direction desiredDir, int step);
-        Direction getDirectionFromPosition(std::pair<int, int> current, std::pair<int, int> target);
-        double getAngleFromDirections(Direction &directionStr, Direction &desiredDir);
+        int rotateTowards(UC::Direction &currentDirection, UC::Direction desiredDir, int step);
+        UC::Direction getDirectionFromPosition(std::pair<int, int> current, std::pair<int, int> target);
+        double getAngleFromDirections(UC::Direction &directionStr, UC::Direction &desiredDir);
     };
 }

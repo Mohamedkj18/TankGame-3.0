@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <string>
 #include <vector>
@@ -6,7 +8,7 @@
 #include "common/AbstractGameManager.h"
 #include "GameManagerRegistrar.h"
 #include "AlgorithmRegistrar.h"
-#include "include/InitialSatellite.h"
+#include "InitialSatellite.h"
 #include <set>
 #include <utility>
 #include <fstream>
@@ -18,7 +20,7 @@ struct GameArgs{
     size_t map_width,map_height,max_steps,num_shells;
     std::unique_ptr<SatelliteView> map;
     std::string map_name ,GameManagerName,player1Name,player2Name;
-    size_t playerAndAlgoFactory1Name, playerAndAlgoFactory2Name;
+    size_t playerAndAlgoFactory1Name, playerAndAlgoFactory2Name, GameManagerID;
 };
 
 

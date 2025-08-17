@@ -1,5 +1,5 @@
 
-#include "SniperRole.h"
+#include "Roles/SniperRole.h"
 #include "MyTankAlgorithm.h"
 
 namespace Algorithm_212788293_212497127
@@ -8,7 +8,7 @@ namespace Algorithm_212788293_212497127
     {
         nextMoves.clear();
 
-        Direction currentDirection = algo.getCurrentDirection();
+        UC::Direction currentDirection = algo.getCurrentDirection();
         std::pair<int, int> pos = algo.getCurrentPosition();
 
         if (algo.shouldShoot(currentDirection, pos))

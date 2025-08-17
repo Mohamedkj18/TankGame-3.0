@@ -1,8 +1,6 @@
 #include <cstddef>
 #include "MySatelliteView.h"
-#include "DirectionUtils.h"
 
-#include "MySatelliteView.h"
 namespace GameManager_212788293_212497127
 {
     MySatelliteView::MySatelliteView(int tankPos,
@@ -14,7 +12,7 @@ namespace GameManager_212788293_212497127
 
     char MySatelliteView::getObjectAt(size_t x, size_t y) const
     {
-        int bijectionIndex = bijection(2 * x, 2 * y);
+        int bijectionIndex = UC::bijection(2 * x, 2 * y);
         if (bijectionIndex == tankPos)
             return '%'; // Current Tank
         if (tanks.count(bijectionIndex))

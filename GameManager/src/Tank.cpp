@@ -2,14 +2,12 @@
 #include <iostream>
 #include "Tank.h"
 #include "Shell.h"
-#include "GameManager.h"
-#include "ActionRequest.h"
 
 namespace GameManager_212788293_212497127
 {
     // ------------------------ Tank ------------------------
 
-    Tank::Tank(int x, int y, Direction dir, std::shared_ptr<GameManager> game, int playerId, int shells, int tankId, int tankGlobalId)
+    Tank::Tank(int x, int y, UC::Direction dir, GameManager* game, int playerId, int shells, int tankId, int tankGlobalId)
         : GameObject(x, y, dir, game), playerId(playerId), artilleryShells(shells), tankId(tankId), tankGlobalId(tankGlobalId)
     {
         cantShoot = 0;
@@ -43,9 +41,9 @@ namespace GameManager_212788293_212497127
 
     void Tank::setDirection(std::string directionStr)
     {
-        if (DirectionsUtils::stringToDirection.find(directionStr) != DirectionsUtils::stringToDirection.end())
+        if (UC::DirectionsUtils::stringToDirection.find(directionStr) != UC::DirectionsUtils::stringToDirection.end())
         {
-            this->direction = DirectionsUtils::stringToDirection[directionStr];
+            this->direction = UC::DirectionsUtils::stringToDirection[directionStr];
         }
         else
         {
@@ -55,9 +53,9 @@ namespace GameManager_212788293_212497127
 
     void Tank::moveBackwards()
     {
-        direction = DirectionsUtils::reverseDirection[direction];
+        direction = UC::DirectionsUtils::reverseDirection[direction];
         moveForward();
-        direction = DirectionsUtils::reverseDirection[direction];
+        direction = UC::DirectionsUtils::reverseDirection[direction];
     }
 
     bool Tank::checkForAWall()
@@ -65,12 +63,12 @@ namespace GameManager_212788293_212497127
         updatePosition(direction);
         if (game->getWalls().count(game->bijection(x, y)) == 1)
         {
-            updatePosition(DirectionsUtils::reverseDirection[direction]);
+            updatePosition(UC::DirectionsUtils::reverseDirection[direction]);
             lastMove = ActionRequest::DoNothing;
 
             return true;
         }
-        updatePosition(DirectionsUtils::reverseDirection[direction]);
+        updatePosition(UC::DirectionsUtils::reverseDirection[direction]);
         if (reverseReady)
             lastMove = ActionRequest::MoveBackward;
         return false;

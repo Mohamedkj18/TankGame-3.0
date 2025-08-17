@@ -6,10 +6,10 @@
 #include <filesystem>
 #include <sstream>
 #include <utility>
+#include "common/GameManagerRegistration.h"
 
 #include "GameManager.h"
 #include "MySatelliteView.h"
-#include "common/GameManagerRegistration.h"
 
 namespace
 {
@@ -217,8 +217,8 @@ namespace GameManager_212788293_212497127
                 {
                     int playerId = (c == '1') ? 1 : 2;
                     auto tank = std::make_unique<Tank>(x * 2, y * 2,
-                                                       (playerId == 1) ? DirectionsUtils::stringToDirection["L"]
-                                                                       : DirectionsUtils::stringToDirection["R"],
+                                                       (playerId == 1) ? UC::DirectionsUtils::stringToDirection["L"]
+                                                                       : UC::DirectionsUtils::stringToDirection["R"],
                                                        this, playerId, numShellsPerTank,
                                                        (playerId == 1) ? tankId1++ : tankId2++,
                                                        globalTankId++);
@@ -295,27 +295,27 @@ namespace GameManager_212788293_212497127
         if (move == ActionRequest::MoveForward)
         {
             tank.resetReverseState();
-            movesOfTanks[tank.getTankGlobalId()] = to_string(tank.getLastMove()) + " (ignored)";
+            movesOfTanks[tank.getTankGlobalId()] = UC::to_string(tank.getLastMove()) + " (ignored)";
             tank.setLastMove(ActionRequest::DoNothing);
         }
         else if (tank.isReverseQueued())
         {
-            movesOfTanks[tank.getTankGlobalId()] = to_string(tank.getLastMove()) + " (ignored)";
+            movesOfTanks[tank.getTankGlobalId()] = UC::to_string(tank.getLastMove()) + " (ignored)";
             tank.incrementReverseCharge();
             if (tank.isReverseReady())
             {
-                movesOfTanks[tank.getTankGlobalId()] = to_string(tank.getLastMove());
+                movesOfTanks[tank.getTankGlobalId()] = UC::to_string(tank.getLastMove());
                 tank.executeReverse();
             }
         }
         else if (move == ActionRequest::MoveBackward)
         {
             tank.queueReverse();
-            movesOfTanks[tank.getTankGlobalId()] = to_string(tank.getLastMove()) + " (ignored)";
+            movesOfTanks[tank.getTankGlobalId()] = UC::to_string(tank.getLastMove()) + " (ignored)";
             tank.incrementReverseCharge();
             if (tank.isReverseReady())
             {
-                movesOfTanks[tank.getTankGlobalId()] = to_string(tank.getLastMove());
+                movesOfTanks[tank.getTankGlobalId()] = UC::to_string(tank.getLastMove());
                 tank.executeReverse();
             }
         }
@@ -326,9 +326,9 @@ namespace GameManager_212788293_212497127
     {
         tank.resetReverseState();
         if (tank.moveForward())
-            movesOfTanks[tank.getTankGlobalId()] = to_string(tank.getLastMove());
+            movesOfTanks[tank.getTankGlobalId()] = UC::to_string(tank.getLastMove());
         else
-            movesOfTanks[tank.getTankGlobalId()] = to_string(tank.getLastMove()) + " (ignored)";
+            movesOfTanks[tank.getTankGlobalId()] = UC::to_string(tank.getLastMove()) + " (ignored)";
         checkForAMine(tank.getX(), tank.getY());
     }
 
@@ -366,7 +366,7 @@ namespace GameManager_212788293_212497127
 
         if (secondaryTanks.count(currTankPos))
         {
-            movesOfTanks[secondaryTanks[currTankPos].get()->getTankGlobalId()] = to_string(tank.getLastMove()) + " (killed)";
+            movesOfTanks[secondaryTanks[currTankPos].get()->getTankGlobalId()] = UC::to_string(tank.getLastMove()) + " (killed)";
             playerTanksCount[secondaryTanks[currTankPos]->getPlayerId()]--;
             tanksToRemove.insert(currTankPos);
         }
@@ -399,7 +399,7 @@ namespace GameManager_212788293_212497127
             if (tank->getCantShoot())
             {
                 if (firstPass && move == ActionRequest::Shoot)
-                    movesOfTanks[tank->getTankGlobalId()] = to_string(tank->getLastMove()) + " (ignored)";
+                    movesOfTanks[tank->getTankGlobalId()] = UC::to_string(tank->getLastMove()) + " (ignored)";
                 tank->incrementCantShoot();
                 if (tank->getCantShoot() == 8)
                     tank->resetCantShoot();
@@ -415,13 +415,13 @@ namespace GameManager_212788293_212497127
             }
             else if (move == ActionRequest::Shoot)
             {
-                movesOfTanks[tank->getTankGlobalId()] = to_string(tank->getLastMove());
+                movesOfTanks[tank->getTankGlobalId()] = UC::to_string(tank->getLastMove());
                 tankShootingShells(*tank);
             }
             else if (move != ActionRequest::GetBattleInfo)
             {
                 if (firstPass)
-                    movesOfTanks[tank->getTankGlobalId()] = to_string(tank->getLastMove());
+                    movesOfTanks[tank->getTankGlobalId()] = UC::to_string(tank->getLastMove());
                 rotate(*tank);
             }
 
@@ -452,7 +452,7 @@ namespace GameManager_212788293_212497127
                 {
                     player2.updateTankWithBattleInfo(*tankAlgorithm, satelliteView);
                 }
-                movesOfTanks[tank->getTankGlobalId()] = to_string(tank->getLastMove());
+                movesOfTanks[tank->getTankGlobalId()] = UC::to_string(tank->getLastMove());
             }
         }
     }
@@ -775,3 +775,5 @@ namespace GameManager_212788293_212497127
         wallsToRemove.clear();
     }
 }
+
+

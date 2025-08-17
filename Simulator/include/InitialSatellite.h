@@ -1,4 +1,6 @@
-#include "SatelliteView.h"
+#pragma once
+
+#include "common/SatelliteView.h"
 #include <set>
 
 class InitialSatellite : public SatelliteView {
