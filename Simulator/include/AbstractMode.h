@@ -36,9 +36,9 @@ struct ParsedMap {
 };
 
 
-class Mode{
+class AbstractMode{
 public:
-    virtual ~Mode() = default;
+    virtual ~AbstractMode() = default;
     virtual std::vector<GameArgs> getAllGames(std::vector<std::string> game_maps) =0;
     ParsedMap parseBattlefieldFile(const std::string& filename);
 };

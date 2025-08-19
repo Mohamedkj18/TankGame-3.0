@@ -1,0 +1,1 @@
+./Simulator/build/simulator -competition game_maps_folder=tests/maps game_manager=tests/GameManagers/GameManager_212788293_212497127 algorithms_folder=tests/Algorithms

@@ -1,43 +1,85 @@
-# ===== Top-level Makefile =====
-# Default artifact suffix for all subprojects
-ID_SUFFIX ?= 212788293_212497127
+# ================= Tanks Game 3.0 — Root Makefile =================
 
-SUBS := Algorithm GameManager Simulator
+# Detect platform
+UNAME_S := $(shell uname -s)
 
-.PHONY: all algorithm gamemanager simulator clean print run run-comparative run-competition rebuild
+ifeq ($(UNAME_S),Darwin)
+  SO_EXT := .dylib
+  RPATH_VAR := DYLD_LIBRARY_PATH
+else
+  SO_EXT := .so
+  RPATH_VAR := LD_LIBRARY_PATH
+endif
 
-# Build everything (libs first, then simulator)
+# Optional user overrides
+CXX      ?= c++
+CXXFLAGS ?= -std=c++20 -O2 -Wall -Wextra -Wpedantic
+
+# Paths
+ALGO_DIR       := Algorithm
+GAMEMAN_DIR    := GameManager
+SIM_DIR        := Simulator
+DIST_DIR       := dist
+
+# Artifacts (as produced by the sub-Makefiles I gave you)
+ALGO_LIB       := $(ALGO_DIR)/Algorithm_212497127_324916402$(SO_EXT)
+GAMEMAN_LIB    := $(GAMEMAN_DIR)/libGameManager$(SO_EXT)
+SIM_BIN        := $(SIM_DIR)/build/simulator
+
+.PHONY: all algorithm gamemanager simulator run print \
+        clean veryclean dist package submit
+
+# Build everything
 all: algorithm gamemanager simulator
 
+# Build each module by delegating to its own Makefile
 algorithm:
-	$$(MAKE) -C Algorithm ID_SUFFIX=$(ID_SUFFIX)
+	@$(MAKE) -C Algorithm CXX="$(CXX)"
 
 gamemanager:
-	$$(MAKE) -C GameManager ID_SUFFIX=$(ID_SUFFIX)
+	@$(MAKE) -C GameManager lib CXX="$(CXX)"
 
-simulator: algorithm gamemanager
-	$$(MAKE) -C Simulator ID_SUFFIX=$(ID_SUFFIX)
+simulator:
+	@$(MAKE) -C Simulator CXX="$(CXX)"
 
-clean:
-	@for d in $(SUBS); do \
-		echo "[CLEAN] $$d"; \
-		$$(MAKE) -C $$d clean ID_SUFFIX=$(ID_SUFFIX); \
-	done
+
+# Run simulator with proper library path so it can find the libs at runtime
+run: all
+	@echo ">>> Running simulator with $(RPATH_VAR) set to repo root"
+	@$(RPATH_VAR)=. $(SIM_BIN)
+
+# Bundle deliverables into dist/ (useful for quick testing or handoff)
+dist: all
+	@mkdir -p $(DIST_DIR)
+	@cp -f $(SIM_BIN) $(DIST_DIR)/
+	@cp -f $(GAMEMAN_LIB) $(DIST_DIR)/
+	@cp -f $(ALGO_LIB) $(DIST_DIR)/
+	@echo "Packed into $(DIST_DIR)/:"
+	@ls -l $(DIST_DIR)
+
+# If your course asks for “submit” artifacts, customize here.
+submit: dist
+	@cd $(DIST_DIR) && tar -czf submission.tgz $(notdir $(SIM_BIN)) $(notdir $(GAMEMAN_LIB)) $(notdir $(ALGO_LIB))
+	@echo "Created $(DIST_DIR)/submission.tgz"
 
 print:
-	@echo "ID_SUFFIX = $(ID_SUFFIX)"
-	@for d in $(SUBS); do \
-		echo "[PRINT] $$d"; \
-		$$(MAKE) -C $$d print ID_SUFFIX=$(ID_SUFFIX) || true; \
-	done
+	@echo "Platform    : $(UNAME_S)"
+	@echo "SO_EXT      : $(SO_EXT)"
+	@echo "Algorithm   : $(ALGO_LIB)"
+	@echo "GameManager : $(GAMEMAN_LIB)"
+	@echo "Simulator   : $(SIM_BIN)"
+	@echo "RPATH var   : $(RPATH_VAR)"
 
-rebuild: clean all
+# Cleanup
+clean:
+	@$(MAKE) -C $(ALGO_DIR) clean || true
+	@$(MAKE) -C $(GAMEMAN_DIR) clean || true
+	@$(MAKE) -C $(SIM_DIR) clean || true
+	@echo "Cleaned objects."
 
-run: simulator
-	$$(MAKE) -C Simulator run ID_SUFFIX=$(ID_SUFFIX)
-
-run-comparative: simulator
-	$$(MAKE) -C Simulator run-comparative ID_SUFFIX=$(ID_SUFFIX)
-
-run-competition: simulator
-	$$(MAKE) -C Simulator run-competition ID_SUFFIX=$(ID_SUFFIX)
+veryclean: clean
+	@$(MAKE) -C $(ALGO_DIR) veryclean || true
+	@$(MAKE) -C $(GAMEMAN_DIR) veryclean || true
+	@$(MAKE) -C $(SIM_DIR) veryclean || true
+	@rm -rf $(DIST_DIR)
+	@echo "Removed libraries, binaries, and dist/."

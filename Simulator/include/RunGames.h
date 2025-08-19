@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Mode.h"
+#include "AbstractMode.h"
 #include "ComparativeMode.h"
 #include "CompetitionMode.h"
 #include "GameManagerRegistrar.h"

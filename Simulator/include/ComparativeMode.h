@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Mode.h"
+#include "AbstractMode.h"
 
 
 
-class ComparativeMode: public Mode {
+class ComparativeMode: public AbstractMode {
     public:
     ~ComparativeMode() override = default;
     std::vector<GameArgs> getAllGames(std::vector<std::string> game_maps) override ;

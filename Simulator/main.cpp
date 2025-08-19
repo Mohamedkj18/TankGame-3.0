@@ -6,7 +6,7 @@
 #include <algorithm>
 #include <memory>
 
-#include "Mode.h"
+#include "AbstractMode.h"
 #include "ComparativeMode.h"
 #include "CompetitionMode.h"
 #include "common/GameResult.h"
@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
         catch (...) { usage("num_threads must be an integer."); return 1; }
     }
 
-    std::unique_ptr<Mode> mode;
+    std::unique_ptr<AbstractMode> mode;
     std::vector<std::string> maps;
 
     if (cli.mode == Cli::Comparative) {
@@ -108,18 +108,36 @@ int main(int argc, char** argv) {
     // Load game managers
     auto& gmReg = GameManagerRegistrar::getGameManagerRegistrar();
     gmReg.initializeGameManagerCount();
-    for(const auto& gameManagerSO : list_shared_objects(cli.kv["game_managers_folder"])) {
-        gmReg.createGameManagerFactoryEntry(fs::path(gameManagerSO).stem().string());
-
+    if(cli.mode == Cli::Competition){
+        if (!file_exists(cli.kv["game_manager"])) {
+            usage("game_manager not found: " + cli.kv["game_manager"]);
+            return 1;
+        }
+        gmReg.createGameManagerFactoryEntry(fs::path(cli.kv["game_manager"]).stem().string());
         std::string err;
         LoadedLib lib;
-        if (!dlopen_self_register(gameManagerSO, lib, err)) {
-            std::cerr << "Failed to load GameManager shared object: " << gameManagerSO << "\nError: " << err << "\n";
-            continue;
+        if (!dlopen_self_register(cli.kv["game_manager"], lib, err)) {
+            std::cerr << "Failed to load GameManager shared object: " << cli.kv["game_manager"] << "\nError: " << err << "\n";
+            return 1;
         }
         gmReg.validateLastRegistration();
         gmReg.updateGameManagerCount();
         std::cout << "Registered GameManager: " << gmReg.getGameManagerFactory(gmReg.getGameManagerCount() - 1).name() << "\n";
+    }
+    else{
+        for(const auto& gameManagerSO : list_shared_objects(cli.kv["game_managers_folder"])) {
+            gmReg.createGameManagerFactoryEntry(fs::path(gameManagerSO).stem().string());
+
+            std::string err;
+            LoadedLib lib;
+            if (!dlopen_self_register(gameManagerSO, lib, err)) {
+                std::cerr << "Failed to load GameManager shared object: " << gameManagerSO << "\nError: " << err << "\n";
+                continue;
+            }
+            gmReg.validateLastRegistration();
+            gmReg.updateGameManagerCount();
+            std::cout << "Registered GameManager: " << gmReg.getGameManagerFactory(gmReg.getGameManagerCount() - 1).name() << "\n";
+            }
         }
     // Load algorithms
     
@@ -140,16 +158,28 @@ int main(int argc, char** argv) {
 
     // Build jobs via your Mode
     std::vector<GameArgs> jobs = mode->getAllGames(maps);
-
+    std::cout << "initialized jobs with " << jobs.size() << " games.\n";
     if (jobs.empty()) { std::cerr << "No games to run.\n"; return 0; }
 
     // Run sequentially for now (add worker threads later)
     std::vector<RanGame> results; results.reserve(jobs.size());
+    std::cout << "results init with " << results.size() << " game results.\n";
     for (auto& g : jobs) {
+        std::cout << "Running game: " << g.map_name << " with GameManager: " << g.GameManagerName << "ID: " << g.GameManagerID
+                  << ", Player1: " << g.player1Name << "ID: " << g.playerAndAlgoFactory1ID <<  ", Player2: " << g.player2Name << "ID: " << g.playerAndAlgoFactory2ID<< "\n";
         results.push_back(run_single_game(g, cli.verbose));
     }
 
     // TODO: write outputs per mode (comparative_results_*.txt or competition_*.txt)
     std::cout << "Ran " << results.size() << " games.\n";
-    return 0;
+    for (const auto& result : results) {
+        std::cout << "Game Result: " << result.gm_name << " vs " << result.map_name
+                  << " | Winner: " << result.result.winner
+                  << " | Reason: " << result.result.reason
+                  << " | Remaining Tanks: ";
+        for (const auto& tank : result.result.remaining_tanks) {
+            std::cout << tank << " ";
+        }
+        std::cout << "\n";
+    }
 }

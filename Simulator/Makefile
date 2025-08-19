@@ -1,81 +1,97 @@
-# ===== Simulator Makefile =====
+# ================= Tanks Game 3.0 — Simulator Makefile =================
+# Exports host symbols; compiles core + {Player, TankAlgorithm, GameManager}Registration
+# Place this file in Simulator/
 
-CXX       := c++
-CXXFLAGS  := -std=c++20 -O2 -Wall -Wextra -Wpedantic -MMD -MP \
-             -Iinclude -I.. -I../UserCommon
-LDFLAGS   :=
-LDLIBS    := -pthread
+# ---- Toolchain / Platform ----
+CXX      ?= c++
+UNAME_S  := $(shell uname -s)
 
-# --- dlopen linkage only on Linux ---
-UNAME_S := $(shell uname -s)
-ifeq ($(UNAME_S),Linux)
-  LDLIBS += -ldl
+# ---- Paths ----
+ROOT_DIR   := .
+SRC_DIR    := $(ROOT_DIR)/core
+BUILD_DIR  := $(ROOT_DIR)/build
+OBJ_DIR    := $(BUILD_DIR)/obj
+
+# ---- Include search paths (headers only) ----
+# Keep the simulator lean: do NOT compile ../common or ../UserCommon sources here.
+INC_DIRS   := $(ROOT_DIR)/include .. ../common ../UserCommon
+
+CXXFLAGS  ?= -std=c++20 -O2 -Wall -Wextra -Wpedantic
+CXXFLAGS  += $(addprefix -I,$(INC_DIRS))
+
+# ---- Export the simulator's symbols so plugins can resolve registration APIs ----
+ifeq ($(UNAME_S),Darwin)
+  EXPORT_DYNAMIC := -Wl,-export_dynamic
+  RPATH_FLAGS    := -Wl,-rpath,@loader_path/..
+  LDLIBS_EXTRA   :=
+else ifeq ($(UNAME_S),Linux)
+  EXPORT_DYNAMIC := -Wl,--export-dynamic
+  RPATH_FLAGS    := -Wl,-rpath,'$$ORIGIN/..'
+  LDLIBS_EXTRA   := -ldl
+else
+  EXPORT_DYNAMIC :=
+  RPATH_FLAGS    :=
+  LDLIBS_EXTRA   :=
 endif
 
-# --- Output name (edit ID if you want) ---
-ID_SUFFIX ?= 212497127_324916402
-SIM_BIN   := simulator_$(ID_SUFFIX)
+LDFLAGS   ?=
+LDFLAGS   += $(EXPORT_DYNAMIC) $(RPATH_FLAGS)
+LDLIBS    ?=
+LDLIBS    += $(LDLIBS_EXTRA)
 
-# --- Sources ---
-CORE_SRC := $(wildcard core/*.cpp)
-REG_SRC  := GameManagerRegistration.cpp PlayerRegistration.cpp TankAlgorithmRegistration.cpp
-MAIN_SRC := main.cpp
-SRC      := $(CORE_SRC) $(REG_SRC) $(MAIN_SRC)
+# ---- Sources (SIMULATOR ONLY) ----
+# Core sources + main
+CORE_SRCS   := $(shell find $(SRC_DIR) -name '*.cpp')
+MAIN_SRCS   := $(wildcard $(ROOT_DIR)/main.cpp)
 
-# --- Objects / deps ---
-OBJDIR := build/obj
-OBJS   := $(SRC:%.cpp=$(OBJDIR)/%.o)
-DEPS   := $(OBJS:.o=.d)
+# Explicitly include registration implementations from either root or core:
+REG_NAMES   := PlayerRegistration TankAlgorithmRegistration GameManagerRegistration
+REG_SRCS    := $(foreach n,$(REG_NAMES), \
+                  $(wildcard $(ROOT_DIR)/$(n).cpp) \
+                  $(wildcard $(SRC_DIR)/$(n).cpp))
 
-# --- Default ---
-.PHONY: all
-all: $(SIM_BIN)
+SRCS        := $(CORE_SRCS) $(MAIN_SRCS) $(REG_SRCS)
 
-# --- Link executable ---
-$(SIM_BIN): $(OBJS)
-	@echo "  [LD]  $@"
-	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
+# ---- Objects ----
+OBJS := $(patsubst $(ROOT_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(filter $(ROOT_DIR)/%,$(SRCS)))
 
-# --- Compile objects (creates nested dirs) ---
-$(OBJDIR)/%.o: %.cpp
+# ---- Target ----
+BIN_NAME := simulator
+BIN_PATH := $(BUILD_DIR)/$(BIN_NAME)
+
+.PHONY: all clean veryclean print run
+
+all: $(BIN_PATH)
+
+# ---- Link the simulator ----
+$(BIN_PATH): $(OBJS)
 	@mkdir -p $(dir $@)
-	@echo "  [C++] $<"
+	$(CXX) $(OBJS) $(LDFLAGS) $(LDLIBS) -o $@
+
+# ---- Compile rules ----
+$(OBJ_DIR)/%.o: $(ROOT_DIR)/%.cpp
+	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# --- Convenience targets ---
-.PHONY: clean print run run-comparative run-competition
-clean:
-	@echo "  [CLEAN]"
-	@rm -rf $(OBJDIR) $(SIM_BIN) *.dSYM
-
+# ---- Utilities ----
 print:
-	@echo "SIM_BIN = $(SIM_BIN)"
-	@echo "SRC     = $(SRC)"
-	@echo "OBJS    = $(OBJS)"
+	@echo "UNAME_S   = $(UNAME_S)"
+	@echo "BIN_PATH  = $(BIN_PATH)"
+	@echo "INC_DIRS  = $(INC_DIRS)"
+	@echo "REG_SRCS  = $(REG_SRCS)"
+	@echo "SRCS:"; printf "  %s\n" $(SRCS)
 
-# Example run targets (edit paths to your libs/maps)
-run: $(SIM_BIN)
-	./$(SIM_BIN) -comparative \
-	  game_map=../maps/sample.map \
-	  game_managers_folder=../GameManager \
-	  algorithm1=../Algorithm/Algorithm_$(ID_SUFFIX).so \
-	  algorithm2=../Algorithm/Algorithm_$(ID_SUFFIX).so \
-	  -verbose
+run: $(BIN_PATH)
+ifeq ($(UNAME_S),Darwin)
+	@echo "Running with DYLD_LIBRARY_PATH=.."
+	@DYLD_LIBRARY_PATH=.. $(BIN_PATH)
+else
+	@echo "Running with LD_LIBRARY_PATH=.."
+	@LD_LIBRARY_PATH=.. $(BIN_PATH)
+endif
 
-run-comparative: $(SIM_BIN)
-	./$(SIM_BIN) -comparative \
-	  game_map=../maps/sample.map \
-	  game_managers_folder=../GameManager \
-	  algorithm1=../algorithms/AlgoA.so \
-	  algorithm2=../algorithms/AlgoB.so \
-	  -verbose
+clean:
+	@rm -rf $(OBJ_DIR)
 
-run-competition: $(SIM_BIN)
-	./$(SIM_BIN) -competition \
-	  game_maps_folder=../maps \
-	  game_manager=../GameManager/GameManager_$(ID_SUFFIX).so \
-	  algorithms_folder=../algorithms \
-	  -verbose
-
-# --- Auto-include deps ---
--include $(DEPS)
+veryclean: clean
+	@rm -f $(BIN_PATH)

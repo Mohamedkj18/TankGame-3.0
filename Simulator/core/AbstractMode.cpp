@@ -1,7 +1,7 @@
-#include "Mode.h"
+#include "AbstractMode.h"
 
 
-ParsedMap Mode::parseBattlefieldFile(const std::string& filename) {
+ParsedMap AbstractMode::parseBattlefieldFile(const std::string& filename) {
     std::ifstream in(filename);
     if (!in) {
         throw std::runtime_error("Cannot open map file: " + filename);
