@@ -46,7 +46,7 @@ Direction &operator+=(Direction &dir, double angle);
 // =========================== UTILS =============================
 int bijection(int x, int y);
 std::pair<int, int> inverseBijection(int z);
-inline std::string to_string(ActionRequest action);
+std::string to_string(ActionRequest action);
 
 class DirectionsUtils
 {

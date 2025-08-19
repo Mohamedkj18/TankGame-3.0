@@ -39,21 +39,8 @@ namespace
         return os.str();
     }
 
-    static inline int bijection_local(int x, int y)
-    {
-        return ((x + y) * (x + y + 1)) / 2 + y;
-    }
 
-    static inline std::pair<int, int> inverse_bijection(int z)
-    {
-        // Inverse of Cantor pairing
-        long long Z = z;
-        long long w = static_cast<long long>(std::floor((std::sqrt(8.0 * Z + 1) - 1) / 2));
-        long long t = w * (w + 1) / 2;
-        long long y = Z - t;
-        long long x = w - y;
-        return {static_cast<int>(x), static_cast<int>(y)};
-    }
+  
 }
 
 namespace GameManager_212788293_212497127
@@ -86,7 +73,7 @@ namespace GameManager_212788293_212497127
 
     void GameManager::addShell(std::unique_ptr<Shell> shell)
     {
-        int newPos = bijection(shell->getX(), shell->getY());
+        int newPos = UC::bijection(shell->getX(), shell->getY());
 
         if (shellsFired.count(newPos))
         {
@@ -672,7 +659,7 @@ namespace GameManager_212788293_212497127
 
         for (const auto &mine : mines)
         {
-            xy = inverse_bijection(mine);
+            xy = UC::inverseBijection(mine);
             int x = xy.first / 2;
             int y = xy.second / 2;
             board[y][x] = '@';

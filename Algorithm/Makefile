@@ -1,45 +1,59 @@
-CXX        ?= g++
-CXXFLAGS   ?= -std=c++20 -O2 -fPIC -Wall -Wextra -Wpedantic -MMD -MP
+# ===== Algorithm/.so build =====
 
-# Put the repo root on the include path so "common/..." works
-ROOT_DIR   ?= ..
-INCLUDES   := -Iinclude -I$(ROOT_DIR)
+CXX       := c++
+CXXFLAGS  := -std=c++20 -O2 -Wall -Wextra -Wpedantic -MMD -MP -fPIC \
+             -Iinclude -I../UserCommon
+LDFLAGS   :=
+LDLIBS    :=
 
-# Your unique IDs
-IDS        ?= 212497127_324916402
+# Force .so as requested (works on Linux; on macOS this still produces a .so with -shared)
+SO_EXT    := so
+SHARED_LDFLAGS := -shared
 
-BUILD_DIR  := build
-OBJ_DIR    := $(BUILD_DIR)/obj
+# -------- Output name (change the suffix to whatever you like) --------
+ID_SUFFIX ?= 212497127_324916402
+TARGET    := Algorithm_$(ID_SUFFIX).$(SO_EXT)
 
-UNAME_S := $(shell uname -s)
-ifeq ($(UNAME_S),Darwin)
-  SHARED_EXT := dylib
-  LDFLAGS   += -dynamiclib -undefined dynamic_lookup
-else
-  SHARED_EXT := so
-  LDFLAGS   += -shared
+# -------- Sources --------
+SRC := \
+  $(wildcard src/*.cpp) \
+  $(wildcard src/Roles/*.cpp)
+
+# Add UserCommon implementation if present
+ifneq ($(wildcard ../UserCommon/DirectionUtils.cpp),)
+  SRC += ../UserCommon/DirectionUtils.cpp
 endif
 
-LIB_NAME   := Algorithm_$(IDS).$(SHARED_EXT)
+# -------- Objects / deps --------
+OBJDIR := build/obj
+OBJS   := $(SRC:%.cpp=$(OBJDIR)/%.o)
+DEPS   := $(OBJS:.o=.d)
 
-SRCS := $(shell find src -name '*.cpp')
-OBJS := $(patsubst src/%.cpp,$(OBJ_DIR)/%.o,$(SRCS))
-DEPS := $(OBJS:.o=.d)
+# -------- Default --------
+.PHONY: all
+all: $(TARGET)
 
-.PHONY: all clean
-all: $(LIB_NAME)
-
-$(LIB_NAME): $(OBJS)
+# -------- Link shared library (.so) --------
+$(TARGET): $(OBJS)
 	@echo "  [LD]  $@"
-	$(CXX) $(LDFLAGS) -o $@ $(OBJS)
+	$(CXX) $(SHARED_LDFLAGS) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
-$(OBJ_DIR)/%.o: src/%.cpp
+# -------- Compile --------
+$(OBJDIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	@echo "  [C++] $<"
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
+# -------- Utilities --------
+.PHONY: clean print
 clean:
 	@echo "  [CLEAN]"
-	@rm -rf $(BUILD_DIR) $(LIB_NAME)
+	@rm -rf $(OBJDIR) $(TARGET) *.dSYM
 
+print:
+	@echo "TARGET   = $(TARGET)"
+	@echo "SRC      = $(SRC)"
+	@echo "OBJS     = $(OBJS)"
+
+# -------- Auto deps --------
 -include $(DEPS)

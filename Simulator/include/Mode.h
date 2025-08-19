@@ -20,7 +20,7 @@ struct GameArgs{
     size_t map_width,map_height,max_steps,num_shells;
     std::unique_ptr<SatelliteView> map;
     std::string map_name ,GameManagerName,player1Name,player2Name;
-    size_t playerAndAlgoFactory1Name, playerAndAlgoFactory2Name, GameManagerID;
+    size_t playerAndAlgoFactory1ID, playerAndAlgoFactory2ID, GameManagerID;
 };
 
 
@@ -38,6 +38,7 @@ struct ParsedMap {
 
 class Mode{
 public:
+    virtual ~Mode() = default;
     virtual std::vector<GameArgs> getAllGames(std::vector<std::string> game_maps) =0;
     ParsedMap parseBattlefieldFile(const std::string& filename);
 };

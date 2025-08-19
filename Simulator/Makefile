@@ -1,51 +1,81 @@
-CXX        ?= g++
-CXXFLAGS   ?= -std=c++20 -O2 -Wall -Wextra -Wpedantic -MMD -MP
+# ===== Simulator Makefile =====
 
-ROOT_DIR        ?= ..
-USER_COMMON_DIR ?= $(ROOT_DIR)/UserCommon
-INCLUDES        := -Iinclude -I$(ROOT_DIR)
-ifneq ($(wildcard $(USER_COMMON_DIR)),)
-  INCLUDES      += -I$(USER_COMMON_DIR)
-endif
+CXX       := c++
+CXXFLAGS  := -std=c++20 -O2 -Wall -Wextra -Wpedantic -MMD -MP \
+             -Iinclude -I.. -I../UserCommon
+LDFLAGS   :=
+LDLIBS    := -pthread
 
-IDS      ?= 212497127_324916402
-BUILD_DIR := build
-OBJ_DIR   := $(BUILD_DIR)/obj
-
+# --- dlopen linkage only on Linux ---
 UNAME_S := $(shell uname -s)
-ifeq ($(UNAME_S),Darwin)
-  LDLIBS  += -pthread
-else
-  LDLIBS  += -ldl -pthread
-  LDFLAGS += -rdynamic
+ifeq ($(UNAME_S),Linux)
+  LDLIBS += -ldl
 endif
 
-BIN := simulator_$(IDS)
+# --- Output name (edit ID if you want) ---
+ID_SUFFIX ?= 212497127_324916402
+SIM_BIN   := simulator_$(ID_SUFFIX)
 
-SRCS := $(shell find core -name '*.cpp') $(wildcard *.cpp)
-OBJS := $(patsubst core/%.cpp,$(OBJ_DIR)/core/%.o,$(filter core/%,$(SRCS))) \
-        $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(filter-out core/%,$(SRCS)))
-DEPS := $(OBJS:.o=.d)
+# --- Sources ---
+CORE_SRC := $(wildcard core/*.cpp)
+REG_SRC  := GameManagerRegistration.cpp PlayerRegistration.cpp TankAlgorithmRegistration.cpp
+MAIN_SRC := main.cpp
+SRC      := $(CORE_SRC) $(REG_SRC) $(MAIN_SRC)
 
-.PHONY: all clean
-all: $(BIN)
+# --- Objects / deps ---
+OBJDIR := build/obj
+OBJS   := $(SRC:%.cpp=$(OBJDIR)/%.o)
+DEPS   := $(OBJS:.o=.d)
 
-$(BIN): $(OBJS)
+# --- Default ---
+.PHONY: all
+all: $(SIM_BIN)
+
+# --- Link executable ---
+$(SIM_BIN): $(OBJS)
 	@echo "  [LD]  $@"
-	$(CXX) -o $@ $(OBJS) $(LDFLAGS) $(LDLIBS)
+	$(CXX) -o $@ $^ $(LDFLAGS) $(LDLIBS)
 
-$(OBJ_DIR)/core/%.o: core/%.cpp
+# --- Compile objects (creates nested dirs) ---
+$(OBJDIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	@echo "  [C++] $<"
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-$(OBJ_DIR)/%.o: %.cpp
-	@mkdir -p $(dir $@)
-	@echo "  [C++] $<"
-	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
-
+# --- Convenience targets ---
+.PHONY: clean print run run-comparative run-competition
 clean:
 	@echo "  [CLEAN]"
-	@rm -rf $(BUILD_DIR) $(BIN)
+	@rm -rf $(OBJDIR) $(SIM_BIN) *.dSYM
 
+print:
+	@echo "SIM_BIN = $(SIM_BIN)"
+	@echo "SRC     = $(SRC)"
+	@echo "OBJS    = $(OBJS)"
+
+# Example run targets (edit paths to your libs/maps)
+run: $(SIM_BIN)
+	./$(SIM_BIN) -comparative \
+	  game_map=../maps/sample.map \
+	  game_managers_folder=../GameManager \
+	  algorithm1=../Algorithm/Algorithm_$(ID_SUFFIX).so \
+	  algorithm2=../Algorithm/Algorithm_$(ID_SUFFIX).so \
+	  -verbose
+
+run-comparative: $(SIM_BIN)
+	./$(SIM_BIN) -comparative \
+	  game_map=../maps/sample.map \
+	  game_managers_folder=../GameManager \
+	  algorithm1=../algorithms/AlgoA.so \
+	  algorithm2=../algorithms/AlgoB.so \
+	  -verbose
+
+run-competition: $(SIM_BIN)
+	./$(SIM_BIN) -competition \
+	  game_maps_folder=../maps \
+	  game_manager=../GameManager/GameManager_$(ID_SUFFIX).so \
+	  algorithms_folder=../algorithms \
+	  -verbose
+
+# --- Auto-include deps ---
 -include $(DEPS)

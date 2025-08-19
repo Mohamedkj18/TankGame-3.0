@@ -1,3 +1,8 @@
+
+#pragma once
+#include "Simulator/include/AlgorithmRegistrar.h" 
+
+
 struct PlayerRegistration {
     PlayerRegistration(PlayerFactory);
   };

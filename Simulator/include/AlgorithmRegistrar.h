@@ -19,7 +19,9 @@ class AlgorithmRegistrar
         PlayerFactory playerFactory;
 
     public:
+        AlgorithmAndPlayerFactories() = default;
         AlgorithmAndPlayerFactories(const std::string &so_name) : so_name(so_name) {}
+        
         void setTankAlgorithmFactory(TankAlgorithmFactory &&factory)
         {
             assert(tankAlgorithmFactory == nullptr);
@@ -67,16 +69,19 @@ public:
     }
     void addTankAlgorithmFactoryToLastEntry(TankAlgorithmFactory &&factory)
     {
-        algorithms[algoID++].setTankAlgorithmFactory(std::move(factory));
+        algorithms[algoID].setTankAlgorithmFactory(std::move(factory));
     }
     struct BadRegistrationException
     {
         std::string name;
         bool hasName, hasPlayerFactory, hasTankAlgorithmFactory;
     };
+    void updateAlgoID(){
+        algoID++;
+    }
     void validateLastRegistration()
     {
-        const auto &last = algorithms[algoID-1];
+        const auto &last = algorithms[algoID];
         bool hasName = (last.name() != "");
         if (!hasName || !last.hasPlayerFactory() || !last.hasTankAlgorithmFactory())
         {

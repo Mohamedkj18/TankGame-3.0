@@ -1,23 +1,43 @@
-IDS ?= 212497127_324916402
+# ===== Top-level Makefile =====
+# Default artifact suffix for all subprojects
+ID_SUFFIX ?= 212788293_212497127
 
-ALGO_DIR := Algorithm
-GM_DIR   := GameManager
-SIM_DIR  := Simulator
+SUBS := Algorithm GameManager Simulator
 
-.PHONY: all algorithm gamemanager simulator clean
+.PHONY: all algorithm gamemanager simulator clean print run run-comparative run-competition rebuild
 
+# Build everything (libs first, then simulator)
 all: algorithm gamemanager simulator
 
 algorithm:
-	@$(MAKE) -C $(ALGO_DIR) IDS="$(IDS)" ROOT_DIR=".."
+	$$(MAKE) -C Algorithm ID_SUFFIX=$(ID_SUFFIX)
 
 gamemanager:
-	@$(MAKE) -C $(GM_DIR) IDS="$(IDS)" ROOT_DIR=".."
+	$$(MAKE) -C GameManager ID_SUFFIX=$(ID_SUFFIX)
 
-simulator:
-	@$(MAKE) -C $(SIM_DIR) IDS="$(IDS)" ROOT_DIR=".."
+simulator: algorithm gamemanager
+	$$(MAKE) -C Simulator ID_SUFFIX=$(ID_SUFFIX)
 
 clean:
-	-@$(MAKE) -C $(ALGO_DIR) clean
-	-@$(MAKE) -C $(GM_DIR) clean
-	-@$(MAKE) -C $(SIM_DIR) clean
+	@for d in $(SUBS); do \
+		echo "[CLEAN] $$d"; \
+		$$(MAKE) -C $$d clean ID_SUFFIX=$(ID_SUFFIX); \
+	done
+
+print:
+	@echo "ID_SUFFIX = $(ID_SUFFIX)"
+	@for d in $(SUBS); do \
+		echo "[PRINT] $$d"; \
+		$$(MAKE) -C $$d print ID_SUFFIX=$(ID_SUFFIX) || true; \
+	done
+
+rebuild: clean all
+
+run: simulator
+	$$(MAKE) -C Simulator run ID_SUFFIX=$(ID_SUFFIX)
+
+run-comparative: simulator
+	$$(MAKE) -C Simulator run-comparative ID_SUFFIX=$(ID_SUFFIX)
+
+run-competition: simulator
+	$$(MAKE) -C Simulator run-competition ID_SUFFIX=$(ID_SUFFIX)

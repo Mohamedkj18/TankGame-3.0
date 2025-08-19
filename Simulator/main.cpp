@@ -6,12 +6,14 @@
 #include <algorithm>
 #include <memory>
 
-#include "include/Mode.h"
-#include "include/ComparativeMode.h"
-#include "include/CompetitionMode.h"
+#include "Mode.h"
+#include "ComparativeMode.h"
+#include "CompetitionMode.h"
 #include "common/GameResult.h"
 #include "include/GameManagerRegistrar.h"
 #include "include/AlgorithmRegistrar.h"
+#include "RunGames.h"
+#include "PluginLoader.h"
 
 namespace fs = std::filesystem;
 
@@ -67,13 +69,10 @@ static std::vector<std::string> list_files(const std::string& dir){
     std::sort(v.begin(), v.end()); return v;
 }
 
-// ------ runner hooks from section (1) and (2) above ------
-static TankAlgorithmFactory make_tank_factory(size_t algo_id);
-static std::unique_ptr<Player> make_player(size_t algo_id,int player_index,size_t x,size_t y,size_t max_steps,size_t num_shells);
-struct RanGame{ std::string gm_name, map_name; size_t algo1_id, algo2_id; GameResult result; };
-static RanGame run_single_game(const GameArgs& g, bool verbose);
 
-// ---------------------------------------------------------
+
+
+
 int main(int argc, char** argv) {
     std::vector<std::string> bad;
     Cli cli = parse_cli(argc, argv, bad);
@@ -106,9 +105,42 @@ int main(int argc, char** argv) {
         mode = std::make_unique<CompetitionMode>();
         // (Pass chosen GM to your CompetitionMode as needed.)
     }
+    // Load game managers
+    auto& gmReg = GameManagerRegistrar::getGameManagerRegistrar();
+    gmReg.initializeGameManagerCount();
+    for(const auto& gameManagerSO : list_shared_objects(cli.kv["game_managers_folder"])) {
+        gmReg.createGameManagerFactoryEntry(fs::path(gameManagerSO).stem().string());
+
+        std::string err;
+        LoadedLib lib;
+        if (!dlopen_self_register(gameManagerSO, lib, err)) {
+            std::cerr << "Failed to load GameManager shared object: " << gameManagerSO << "\nError: " << err << "\n";
+            continue;
+        }
+        gmReg.validateLastRegistration();
+        gmReg.updateGameManagerCount();
+        std::cout << "Registered GameManager: " << gmReg.getGameManagerFactory(gmReg.getGameManagerCount() - 1).name() << "\n";
+        }
+    // Load algorithms
+    
+    auto& algoReg = AlgorithmRegistrar::getAlgorithmRegistrar();
+    algoReg.initializeAlgoID();
+    for(const auto& algoSO : list_shared_objects(cli.kv["algorithms_folder"])) {
+        std::string err;
+        LoadedLib lib;
+        algoReg.createAlgorithmFactoryEntry(fs::path(algoSO).stem().string());
+        if (!dlopen_self_register(algoSO, lib, err)) {
+            std::cerr << "Failed to load Algorithm shared object: " << algoSO << "\nError: " << err << "\n";
+            continue;
+        }
+        algoReg.validateLastRegistration();
+        algoReg.updateAlgoID();
+        std::cout << "Registered Algorithm: " << algoReg.getPlayerAndAlgoFactory(algoReg.getAlgoID() - 1).name() << "\n";
+    }
 
     // Build jobs via your Mode
     std::vector<GameArgs> jobs = mode->getAllGames(maps);
+
     if (jobs.empty()) { std::cerr << "No games to run.\n"; return 0; }
 
     // Run sequentially for now (add worker threads later)

@@ -3,7 +3,7 @@
 
 
 
-static TankAlgorithmFactory make_tank_factory(size_t algo_id) {
+TankAlgorithmFactory make_tank_factory(size_t algo_id) {
     return [algo_id](int player_index, int tank_index) {
         auto& reg = AlgorithmRegistrar::getAlgorithmRegistrar();
         auto& entry = reg.getPlayerAndAlgoFactory(algo_id);
@@ -12,7 +12,7 @@ static TankAlgorithmFactory make_tank_factory(size_t algo_id) {
 }
 
 
-static std::unique_ptr<Player> make_player(size_t algo_id,
+std::unique_ptr<Player> make_player(size_t algo_id,
     int player_index,
     size_t x, size_t y,
     size_t max_steps, size_t num_shells)
@@ -26,8 +26,8 @@ return entry.createPlayer(player_index, x, y, max_steps, num_shells); // unique_
 
 
 
-static RanGame run_single_game(const GameArgs& g, bool verbose) {
-    // 1) GameManager by name
+RanGame run_single_game(const GameArgs& g, bool verbose) {
+    // 1) GameManager by ID
     auto& gmReg = GameManagerRegistrar::getGameManagerRegistrar();
     auto it = gmReg.gameManagers.find(g.GameManagerID);
     if (it == gmReg.gameManagers.end() || !it->second.hasFactory()) {
@@ -36,12 +36,12 @@ static RanGame run_single_game(const GameArgs& g, bool verbose) {
     std::unique_ptr<AbstractGameManager> gm = it->second.create(verbose);  // factory(verbose) under the hood 
 
     // 2) Factories for the two algorithms
-    TankAlgorithmFactory f1 = make_tank_factory(g.playerAndAlgoFactory1Name);
-    TankAlgorithmFactory f2 = make_tank_factory(g.playerAndAlgoFactory2Name);
+    TankAlgorithmFactory f1 = make_tank_factory(g.playerAndAlgoFactory1ID);
+    TankAlgorithmFactory f2 = make_tank_factory(g.playerAndAlgoFactory2ID);
 
     // 3) Players for each side (initial x,y are placeholders; GM/Player usually handle placement using the SatelliteView)
-    std::unique_ptr<Player> p1 = make_player(g.playerAndAlgoFactory1Name, /*player_index=*/1, g.map_width, g.map_height, g.max_steps, g.num_shells);
-    std::unique_ptr<Player> p2 = make_player(g.playerAndAlgoFactory2Name, /*player_index=*/2, g.map_width, g.map_height, g.max_steps, g.num_shells);
+    std::unique_ptr<Player> p1 = make_player(g.playerAndAlgoFactory1ID, /*player_index=*/1, g.map_width, g.map_height, g.max_steps, g.num_shells);
+    std::unique_ptr<Player> p2 = make_player(g.playerAndAlgoFactory2ID, /*player_index=*/2, g.map_width, g.map_height, g.max_steps, g.num_shells);
 
     // 4) Run one game
     GameResult res = gm->run(
@@ -53,5 +53,5 @@ static RanGame run_single_game(const GameArgs& g, bool verbose) {
         f1, f2
     );
 
-    return RanGame{ g.GameManagerName, g.map_name, g.playerAndAlgoFactory1Name, g.playerAndAlgoFactory2Name, std::move(res) };
+    return RanGame{ g.GameManagerName, g.map_name, g.playerAndAlgoFactory1ID, g.playerAndAlgoFactory2ID, std::move(res) };
 }

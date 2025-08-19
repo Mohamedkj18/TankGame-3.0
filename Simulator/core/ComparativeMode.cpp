@@ -15,9 +15,9 @@ std::vector<GameArgs> ComparativeMode::getAllGames(std::vector<std::string> game
     // Iterate through all registered game managers
     struct ParsedMap parsedMap = parseBattlefieldFile(game_maps[0]);
     auto satellite = std::make_unique<InitialSatellite> (parsedMap.player1tanks, parsedMap.player2tanks, parsedMap.walls, parsedMap.mines);
-    for (size_t i = 0; i < gameManagerRegistrar.getGameManagerCount(); ++i) {
+    for (size_t i = 0; i < gameManagerRegistrar.getGameManagerCount(); i++) {
         if(gameManagerRegistrar.gameManagers.count(i)){
-        auto& gameManagerFactory = gameManagerRegistrar.gameManagers.at(i);
+        auto& gameManagerFactory = gameManagerRegistrar.getGameManagerFactory(i);
         if (gameManagerFactory.hasFactory()) 
             games.push_back({
                 parsedMap.map_width,

@@ -1,5 +1,8 @@
+#pragma once
+
 #include <functional>
 #include "AbstractGameManager.h"
+#include "Simulator/include/GameManagerRegistrar.h" 
 
 struct GameManagerRegistration
 {

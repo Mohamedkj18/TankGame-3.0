@@ -1,6 +1,7 @@
 #include "AlgorithmRegistrar.h"
 
 AlgorithmRegistrar AlgorithmRegistrar::registrar;
+size_t AlgorithmRegistrar::algoID = 0;
 void AlgorithmRegistrar::initializeAlgoID(){
     algoID = 0;
 }

@@ -63,9 +63,8 @@ std::pair<int, int> inverseBijection(int z)
     int x = w - y;
     return {x, y};
 }
-}
 
-inline std::string to_string(ActionRequest action)
+std::string to_string(ActionRequest action)
 {
     switch (action)
     {
@@ -91,3 +90,7 @@ inline std::string to_string(ActionRequest action)
         return "UnknownAction";
     }
 }
+
+
+}
+

@@ -18,6 +18,7 @@ public:
         std::function<std::unique_ptr<AbstractGameManager>(bool verbose)> factory;
 
     public:
+        GameManagerFactory() = default;
         GameManagerFactory(const std::string &so_name) : so_name(so_name) {}
         void setFactory(std::function<std::unique_ptr<AbstractGameManager>(bool verbose)> &&factory)
         {
@@ -39,10 +40,8 @@ public:
     static size_t GameManagerCount;
 
 public:
-    static GameManagerRegistrar &getGameManagerRegistrar()
-    {
-        return registrar;
-    }
+    static GameManagerRegistrar &getGameManagerRegistrar();
+    
     static void initializeGameManagerCount()
     {
         GameManagerCount = 0;
@@ -68,7 +67,7 @@ public:
     }
     void addGameManagerFactoryToLastEntry(std::function<std::unique_ptr<AbstractGameManager>(bool verbose)> &&factory)
     {
-        gameManagers[GameManagerCount++].setFactory(std::move(factory));
+        gameManagers[GameManagerCount].setFactory(std::move(factory));
     }
     struct BadRegistrationException
     {
@@ -77,7 +76,7 @@ public:
     };
     void validateLastRegistration()
     {
-        const auto &last = gameManagers[GameManagerCount - 1];
+        const auto &last = gameManagers[GameManagerCount];
         bool hasName = (last.name() != "");
         if (!hasName || !last.hasFactory())
         {
@@ -87,6 +86,10 @@ public:
                 last.hasFactory()};
         }
     }
+    void updateGameManagerCount()
+    {
+        GameManagerCount++;
+    }  
     void removeLast()
     {
         if (gameManagers.empty())

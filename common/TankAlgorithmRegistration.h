@@ -1,3 +1,7 @@
+
+#pragma once
+#include "Simulator/include/AlgorithmRegistrar.h" 
+
 struct TankAlgorithmRegistration
 {
     TankAlgorithmRegistration(TankAlgorithmFactory);
