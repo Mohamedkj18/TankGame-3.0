@@ -17,3 +17,4 @@ struct RanGame {
 TankAlgorithmFactory make_tank_factory(size_t algo_id);
 std::unique_ptr<Player> make_player(size_t algo_id, int player_index, size_t x, size_t y, size_t max_steps, size_t num_shells);
 RanGame run_single_game(const GameArgs& g, bool verbose);
+void openSOFilesCompetitionMode(Cli cli, std::vector<LoadedLib>& algoLibs, std::vector<LoadedLib>& gmLibs);

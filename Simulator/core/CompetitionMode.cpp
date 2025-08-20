@@ -12,7 +12,7 @@ std::vector<GameArgs> CompetitionMode::getAllGames(std::vector<std::string> game
         throw std::runtime_error("No game managers registered.");
     }
     std::string gameManagerName = gameManagerRegistrar.begin()->second.name();
-    int algoCount = algorithmRegistrar.getAlgoID();
+    size_t algoCount = algorithmRegistrar.getAlgoID();
     // Iterate through all registered game managers
     for(int i=0; i<(int)game_maps.size(); i++) {
         std::set<std::pair<size_t, size_t>> assignedGames;
@@ -39,4 +39,68 @@ std::vector<GameArgs> CompetitionMode::getAllGames(std::vector<std::string> game
         }
     }
     return games;
+}
+
+
+int CompetitionMode::openSOFiles(Cli cli ,std::vector<LoadedLib> algoLibs, std::vector<LoadedLib> gmLibs) {
+    auto& gmReg = GameManagerRegistrar::getGameManagerRegistrar();
+    gmReg.initializeGameManagerCount();
+    auto& algoReg = AlgorithmRegistrar::getAlgorithmRegistrar();
+    algoReg.initializeAlgoID();
+    std::cout << "Registering GameManager: " << cli.kv["game_manager"] << "\n";
+
+    if (!file_exists(cli.kv["game_manager"])) {
+        usage("game_manager not found: " + cli.kv["game_manager"]);
+        return 1;
+    }
+    gmReg.createGameManagerFactoryEntry(fs::path(cli.kv["game_manager"]).stem().string());
+    std::string err;
+    LoadedLib lib;
+    if (!dlopen_self_register(cli.kv["game_manager"], lib, err)) {
+        std::cerr << "Failed to load GameManager shared object: " << cli.kv["game_manager"] << "\nError: " << err << "\n";
+        return 1;
+    }
+    gmReg.validateLastRegistration();
+    gmReg.updateGameManagerCount();
+    gmLibs.push_back(lib);
+    std::cout << "Registered GameManager: " << gmReg.getGameManagerFactory(gmReg.getGameManagerCount() - 1).name() << "\n";
+
+    for(const auto& algoSO : list_shared_objects(cli.kv["algorithms_folder"])) {
+        std::string err;
+        LoadedLib lib;
+        std::string algoName = fs::path(algoSO).stem().string();
+        algoReg.createAlgorithmFactoryEntry(algoName);
+        if (!dlopen_self_register(algoSO, lib, err)) {
+            std::cerr << "Failed to load Algorithm shared object: " << algoSO << "\nError: " << err << "\n";
+            continue;
+        }
+        algoReg.validateLastRegistration();
+        algoReg.updateAlgoID();
+        algoLibs.push_back(lib);
+        algoNamesAndScores[algoName] = 0; // Initialize score for this algorithm
+        std::cout << "Registered Algorithm: " << algoReg.getPlayerAndAlgoFactory(algoReg.getAlgoID() - 1).name() << "\n";
+    }
+    if (algoReg.count() < 2) {
+        usage("algorithms_folder must contain at least two algorithms.");
+        return 1;
+    }
+    return 0;    
+}
+
+
+void add_relaxed(std::atomic<size_t>& x, size_t d) {
+    x.fetch_add(d, std::memory_order_relaxed);
+}
+
+void CompetitionMode::applyCompetitionScore(const GameArgs& g, GameResult r) {
+    const std::string a1 = g.player1Name; // your IDs from job building
+    const std::string a2 = g.player2Name;
+    switch (r.winner) {
+        case 1:  add_relaxed(algoNamesAndScores[a1], 3); break;
+        case 2:  add_relaxed(algoNamesAndScores[a2], 3); break;
+        default: // 0 = tie
+            add_relaxed(algoNamesAndScores[a1], 1);
+            add_relaxed(algoNamesAndScores[a2], 1);
+            break;
+    }
 }

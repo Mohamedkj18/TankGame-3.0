@@ -9,6 +9,7 @@
 #include "GameManagerRegistrar.h"
 #include "AlgorithmRegistrar.h"
 #include "InitialSatellite.h"
+#include "PluginLoader.h"
 #include <set>
 #include <utility>
 #include <fstream>
@@ -22,6 +23,9 @@ struct GameArgs{
     std::string map_name ,GameManagerName,player1Name,player2Name;
     size_t playerAndAlgoFactory1ID, playerAndAlgoFactory2ID, GameManagerID;
 };
+
+
+
 
 
 struct ParsedMap {
@@ -40,5 +44,9 @@ class AbstractMode{
 public:
     virtual ~AbstractMode() = default;
     virtual std::vector<GameArgs> getAllGames(std::vector<std::string> game_maps) =0;
+    virtual int openSOFiles(Cli cli,std::vector<LoadedLib> algoLibs, std::vector<LoadedLib> gmLibs) = 0;
+    virtual void applyCompetitionScore(const GameArgs& g, GameResult res) = 0;
     ParsedMap parseBattlefieldFile(const std::string& filename);
+    
+
 };

@@ -1,10 +1,3 @@
-#include <iostream>
-#include <unordered_map>
-#include <string>
-#include <vector>
-#include <filesystem>
-#include <algorithm>
-#include <memory>
 
 #include "AbstractMode.h"
 #include "ComparativeMode.h"
@@ -13,61 +6,13 @@
 #include "include/GameManagerRegistrar.h"
 #include "include/AlgorithmRegistrar.h"
 #include "RunGames.h"
-#include "PluginLoader.h"
+#include <thread>
 
-namespace fs = std::filesystem;
 
-// ---------- CLI ----------
-struct Cli {
-    enum Mode { Comparative, Competition } mode;
-    bool verbose = false;
-    std::unordered_map<std::string,std::string> kv;
-};
 
-static inline std::string trim(const std::string& s) {
-    const char* ws = " \t\r\n";
-    auto b = s.find_first_not_of(ws);
-    auto e = s.find_last_not_of(ws);
-    return (b==std::string::npos) ? "" : s.substr(b, e-b+1);
-}
 
-static Cli parse_cli(int argc, char** argv, std::vector<std::string>& bad) {
-    Cli cli{};
-    bool mode_set=false;
-    for (int i=1;i<argc;++i) {
-        std::string s(argv[i]);
-        if (s=="-comparative") { cli.mode=Cli::Comparative; mode_set=true; continue; }
-        if (s=="-competition") { cli.mode=Cli::Competition; mode_set=true; continue; }
-        if (s=="-verbose")     { cli.verbose=true; continue; }
-        auto eq = s.find('=');
-        if (eq!=std::string::npos) {
-            auto k = trim(s.substr(0,eq));
-            auto v = trim(s.substr(eq+1));
-            if (!k.empty() && !v.empty()) cli.kv[k]=v; else bad.push_back(s);
-        } else bad.push_back(s);
-    }
-    if (!mode_set) bad.push_back("(missing -comparative/-competition)");
-    return cli;
-}
 
-static void usage(const std::string& err, const std::vector<std::string>& bad={}) {
-    std::cerr << "Error: " << err << "\n";
-    if (!bad.empty()) {
-        std::cerr << "Unsupported/invalid:"; for (auto& s: bad) std::cerr << " " << s; std::cerr << "\n";
-    }
-    std::cerr <<
-"Comparative:\n"
-"  ./sim -comparative game_map=<file> game_managers_folder=<dir> algorithm1=<so> algorithm2=<so> [num_threads=<n>] [-verbose]\n"
-"Competition:\n"
-"  ./sim -competition game_maps_folder=<dir> game_manager=<so> algorithms_folder=<dir> [num_threads=<n>] [-verbose]\n";
-}
 
-static bool file_exists(const std::string& p){ std::error_code ec; return fs::is_regular_file(p,ec); }
-static bool dir_exists (const std::string& p){ std::error_code ec; return fs::is_directory(p,ec); }
-static std::vector<std::string> list_files(const std::string& dir){
-    std::vector<std::string> v; for (auto& e: fs::directory_iterator(dir)) if (e.is_regular_file()) v.push_back(e.path().string());
-    std::sort(v.begin(), v.end()); return v;
-}
 
 
 
@@ -106,55 +51,14 @@ int main(int argc, char** argv) {
         // (Pass chosen GM to your CompetitionMode as needed.)
     }
     // Load game managers
-    auto& gmReg = GameManagerRegistrar::getGameManagerRegistrar();
-    gmReg.initializeGameManagerCount();
-    if(cli.mode == Cli::Competition){
-        if (!file_exists(cli.kv["game_manager"])) {
-            usage("game_manager not found: " + cli.kv["game_manager"]);
-            return 1;
-        }
-        gmReg.createGameManagerFactoryEntry(fs::path(cli.kv["game_manager"]).stem().string());
-        std::string err;
-        LoadedLib lib;
-        if (!dlopen_self_register(cli.kv["game_manager"], lib, err)) {
-            std::cerr << "Failed to load GameManager shared object: " << cli.kv["game_manager"] << "\nError: " << err << "\n";
-            return 1;
-        }
-        gmReg.validateLastRegistration();
-        gmReg.updateGameManagerCount();
-        std::cout << "Registered GameManager: " << gmReg.getGameManagerFactory(gmReg.getGameManagerCount() - 1).name() << "\n";
-    }
-    else{
-        for(const auto& gameManagerSO : list_shared_objects(cli.kv["game_managers_folder"])) {
-            gmReg.createGameManagerFactoryEntry(fs::path(gameManagerSO).stem().string());
-
-            std::string err;
-            LoadedLib lib;
-            if (!dlopen_self_register(gameManagerSO, lib, err)) {
-                std::cerr << "Failed to load GameManager shared object: " << gameManagerSO << "\nError: " << err << "\n";
-                continue;
-            }
-            gmReg.validateLastRegistration();
-            gmReg.updateGameManagerCount();
-            std::cout << "Registered GameManager: " << gmReg.getGameManagerFactory(gmReg.getGameManagerCount() - 1).name() << "\n";
-            }
-        }
-    // Load algorithms
+    std::vector<LoadedLib> gmLibs;
+    std::vector<LoadedLib> algoLibs;
     
-    auto& algoReg = AlgorithmRegistrar::getAlgorithmRegistrar();
-    algoReg.initializeAlgoID();
-    for(const auto& algoSO : list_shared_objects(cli.kv["algorithms_folder"])) {
-        std::string err;
-        LoadedLib lib;
-        algoReg.createAlgorithmFactoryEntry(fs::path(algoSO).stem().string());
-        if (!dlopen_self_register(algoSO, lib, err)) {
-            std::cerr << "Failed to load Algorithm shared object: " << algoSO << "\nError: " << err << "\n";
-            continue;
-        }
-        algoReg.validateLastRegistration();
-        algoReg.updateAlgoID();
-        std::cout << "Registered Algorithm: " << algoReg.getPlayerAndAlgoFactory(algoReg.getAlgoID() - 1).name() << "\n";
+    if(mode->openSOFiles(cli, algoLibs, gmLibs) != 0) {
+        std::cerr << "Failed to open shared object files.\n";
+        return 1;
     }
+
 
     // Build jobs via your Mode
     std::vector<GameArgs> jobs = mode->getAllGames(maps);
@@ -162,13 +66,32 @@ int main(int argc, char** argv) {
     if (jobs.empty()) { std::cerr << "No games to run.\n"; return 0; }
 
     // Run sequentially for now (add worker threads later)
-    std::vector<RanGame> results; results.reserve(jobs.size());
+    std::atomic<size_t> next{0};
+    const size_t n = jobs.size();
+    num_threads = std::min<size_t>(num_threads, n);
+    std::vector<RanGame> results(n);
+
+
+    auto worker = [&] {
+        while (true) {
+            size_t i = next.fetch_add(1, std::memory_order_relaxed);
+            if (i >= n) break;
+            results[i] = run_single_game(jobs[i], cli.verbose);
+            mode->applyCompetitionScore(jobs[i], results[i].result);
+        }
+    };
+
+    std::vector<std::thread> threads;
+    for (int t = 0; t < num_threads; ++t)
+        threads.emplace_back(worker);
+
+    for (auto& th : threads) th.join();
+
+
+
+
     std::cout << "results init with " << results.size() << " game results.\n";
-    for (auto& g : jobs) {
-        std::cout << "Running game: " << g.map_name << " with GameManager: " << g.GameManagerName << "ID: " << g.GameManagerID
-                  << ", Player1: " << g.player1Name << "ID: " << g.playerAndAlgoFactory1ID <<  ", Player2: " << g.player2Name << "ID: " << g.playerAndAlgoFactory2ID<< "\n";
-        results.push_back(run_single_game(g, cli.verbose));
-    }
+    
 
     // TODO: write outputs per mode (comparative_results_*.txt or competition_*.txt)
     std::cout << "Ran " << results.size() << " games.\n";
