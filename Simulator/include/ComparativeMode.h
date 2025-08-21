@@ -39,7 +39,7 @@ class ComparativeMode: public AbstractMode {
     std::vector<GameArgs> getAllGames(std::vector<std::string> game_maps) override ;
     int openSOFiles(Cli cli, std::vector<LoadedLib> algoLibs, std::vector<LoadedLib> gmLibs) override;
     void applyCompetitionScore(const GameArgs& g, GameResult res) override ;
-    std::string ComparativeMode::satelliteViewToString(const SatelliteView& view,
+    std::string satelliteViewToString(const SatelliteView& view,
         size_t width, size_t height);
      
     

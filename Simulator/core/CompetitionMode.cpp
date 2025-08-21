@@ -88,7 +88,7 @@ int CompetitionMode::openSOFiles(Cli cli ,std::vector<LoadedLib> algoLibs, std::
 }
 
 
-void add_relaxed(std::atomic<size_t>& x, size_t d) {
+void CompetitionMode::add_relaxed(std::atomic<size_t>& x, size_t d) {
     x.fetch_add(d, std::memory_order_relaxed);
 }
 

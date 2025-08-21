@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
             size_t i = next.fetch_add(1, std::memory_order_relaxed);
             if (i >= n) break;
             results[i] = run_single_game(jobs[i], cli.verbose);
-            mode->applyCompetitionScore(jobs[i], results[i].result);
+            mode->applyCompetitionScore(jobs[i], std::move(results[i].result));
         }
     };
 
