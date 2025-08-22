@@ -32,15 +32,15 @@ struct ComparativeKeyHash {
 class ComparativeMode: public AbstractMode {
     // Key = outcome, Value = list of GM names that produced it
     std::unordered_map<ComparativeKey, std::vector<std::string>, ComparativeKeyHash> gmNamesAndResults;
-    std::unordered_map<ComparativeKey, GameResult, ComparativeKeyHash> gamesResults;
+    std::unordered_map<ComparativeKey, ComparativeKey, ComparativeKeyHash> gamesResults;
     std::mutex clusters_mtx;
     public:
     ~ComparativeMode() override = default;
     std::vector<GameArgs> getAllGames(std::vector<std::string> game_maps) override ;
     int openSOFiles(Cli cli, std::vector<LoadedLib> algoLibs, std::vector<LoadedLib> gmLibs) override;
-    void applyCompetitionScore(const GameArgs& g, GameResult res) override ;
-    std::string satelliteViewToString(const SatelliteView& view,
-        size_t width, size_t height);
+    void applyCompetitionScore(const GameArgs& g, GameResult res, std::string finalGameState) override ;
+    void writeComparativeResults(const std::string& game_managers_folder, const std::string& game_map_filename, const std::string& algorithm1_so, const std::string& algorithm2_so);
+
      
     
 };

@@ -21,10 +21,11 @@ std::vector<GameArgs> CompetitionMode::getAllGames(std::vector<std::string> game
         ParsedMap parsedMap = parseBattlefieldFile(game_map);
         
         // Create an InitialSatellite object with the parsed map data
-        auto satellite = std::make_unique<InitialSatellite>(parsedMap.player1tanks, parsedMap.player2tanks, parsedMap.walls, parsedMap.mines);
 
         for(size_t j=0; j<algoCount; j++) {
             // Create game arguments for each algorithm
+            auto satellite = std::make_unique<InitialSatellite>(parsedMap.player1tanks, parsedMap.player2tanks, parsedMap.walls, parsedMap.mines);
+
             size_t k = (i+j+1)%(algoCount-1);
             if (k == j) continue; // Skip if both algorithms are the same
             if (assignedGames.count({k, j}) > 0 || assignedGames.count({j, k}) > 0 ) continue; // Skip if already assigned
@@ -92,7 +93,7 @@ void CompetitionMode::add_relaxed(std::atomic<size_t>& x, size_t d) {
     x.fetch_add(d, std::memory_order_relaxed);
 }
 
-void CompetitionMode::applyCompetitionScore(const GameArgs& g, GameResult r) {
+void CompetitionMode::applyCompetitionScore(const GameArgs& g, GameResult r, std::string finalGameState) {
     const std::string a1 = g.player1Name; // your IDs from job building
     const std::string a2 = g.player2Name;
     switch (r.winner) {
@@ -104,3 +105,49 @@ void CompetitionMode::applyCompetitionScore(const GameArgs& g, GameResult r) {
             break;
     }
 }
+
+std::vector<std::pair<std::string, size_t>> CompetitionMode::build_sorted_score_table() {
+    std::vector<std::pair<std::string, size_t>> table;
+    table.reserve(algoNamesAndScores.size());
+    for (const auto& [name, score_atomic] : algoNamesAndScores) {
+        table.emplace_back(name, score_atomic.load(std::memory_order_relaxed));
+    }
+    std::sort(table.begin(), table.end(),
+              [](const auto& a, const auto& b) {
+                  if (a.second != b.second) return a.second > b.second; // score desc
+                  return a.first < b.first; // tie-breaker: name asc (allowed by spec)
+              });
+    return table;
+}
+
+void CompetitionMode::writeCompetitionResults(const std::string& algorithms_folder, const std::string& game_maps_folder, const std::string& game_manager_so){
+    const auto table = build_sorted_score_table();
+    const std::string filename = "competition_" + unique_time_str() + ".txt";
+    const std::string outpath  = (fs::path(algorithms_folder) / filename).string();
+
+    std::ofstream out(outpath);
+    std::ostream* sink = &out;
+    bool to_stdout = false;
+
+    if (!out) {
+        std::cerr << "Could not create " << outpath
+            << " — printing competition results to stdout instead.\n";
+        sink = &std::cout;
+        to_stdout = true;
+        }
+
+    // Header lines (exact text/ordering per assignment)
+    (*sink) << "game_maps_folder=" << game_maps_folder << "\n";
+    (*sink) << "game_manager="     << game_manager_so   << "\n";
+    (*sink) << "\n"; // blank line
+
+    // Sorted table: "<algorithm name> <total score>"
+    for (const auto& [name, score] : table) {
+        (*sink) << name << " " << score << "\n";
+        }
+
+    if (!to_stdout) {
+        out.flush();
+    std::cout << "Competition results written to: " << outpath << "\n";
+    }
+    }

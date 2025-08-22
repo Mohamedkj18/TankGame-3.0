@@ -76,8 +76,13 @@ int main(int argc, char** argv) {
         while (true) {
             size_t i = next.fetch_add(1, std::memory_order_relaxed);
             if (i >= n) break;
+            std::cout << "Running game " << i + 1 << "/" << n << "\n";
             results[i] = run_single_game(jobs[i], cli.verbose);
-            mode->applyCompetitionScore(jobs[i], std::move(results[i].result));
+            std::cout << "Game " << i+1 << "/" << n << ": "
+                      << results[i].gm_name << " vs " << results[i].map_name
+                      << " | Winner: " << results[i].result.winner
+                      << "\n";
+            mode->applyCompetitionScore(jobs[i], std::move(results[i].result), results[i].gameFinalState);
         }
     };
 
@@ -86,8 +91,20 @@ int main(int argc, char** argv) {
         threads.emplace_back(worker);
 
     for (auto& th : threads) th.join();
+    
 
+    if (auto* cm = dynamic_cast<CompetitionMode*>(mode.get())) 
+        cm->writeCompetitionResults(cli.kv["algorithms_folder"], cli.kv["game_maps_folder"], fs::path(cli.kv["game_manager"]).filename().string());
+    
 
+    
+    if (auto* cm = dynamic_cast<ComparativeMode*>(mode.get())) 
+        cm->writeComparativeResults(cli.kv["game_managers_folder"],
+                                    fs::path(cli.kv["game_map"]).filename().string(),
+                                    fs::path(cli.kv["algorithm1"]).filename().string(),
+                                    fs::path(cli.kv["algorithm2"]).filename().string());
+    
+    
 
 
     std::cout << "results init with " << results.size() << " game results.\n";
