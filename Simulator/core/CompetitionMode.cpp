@@ -3,8 +3,6 @@
 std::vector<GameArgs> CompetitionMode::getAllGames(std::vector<std::string> game_maps) {
     // This function retrieves all games for the competition mode based on the provided game maps.
     std::vector<GameArgs> games;
-    
-
     // Retrieve the game manager factory
     auto& gameManagerRegistrar = GameManagerRegistrar::getGameManagerRegistrar();
     auto& algorithmRegistrar = AlgorithmRegistrar::getAlgorithmRegistrar();
@@ -19,9 +17,6 @@ std::vector<GameArgs> CompetitionMode::getAllGames(std::vector<std::string> game
         const auto& game_map = game_maps[i];
         // Parse the map file to get the initial state
         ParsedMap parsedMap = parseBattlefieldFile(game_map);
-        
-        // Create an InitialSatellite object with the parsed map data
-
         for(size_t j=0; j<algoCount; j++) {
             // Create game arguments for each algorithm
             auto satellite = std::make_unique<InitialSatellite>(parsedMap.player1tanks, parsedMap.player2tanks, parsedMap.walls, parsedMap.mines);
@@ -44,28 +39,17 @@ std::vector<GameArgs> CompetitionMode::getAllGames(std::vector<std::string> game
 
 
 int CompetitionMode::openSOFiles(Cli cli ,std::vector<LoadedLib> algoLibs, std::vector<LoadedLib> gmLibs) {
-    auto& gmReg = GameManagerRegistrar::getGameManagerRegistrar();
-    gmReg.initializeGameManagerCount();
+    if(registerAlgorithms(cli, algoLibs))return 1;
+    if(registerGameManager(cli, gmLibs))return 1;
+    return 0;    
+}
+
+
+
+int CompetitionMode::registerAlgorithms(Cli cli, std::vector<LoadedLib> algoLibs){
     auto& algoReg = AlgorithmRegistrar::getAlgorithmRegistrar();
     algoReg.initializeAlgoID();
-    std::cout << "Registering GameManager: " << cli.kv["game_manager"] << "\n";
-
-    if (!file_exists(cli.kv["game_manager"])) {
-        usage("game_manager not found: " + cli.kv["game_manager"]);
-        return 1;
-    }
-    gmReg.createGameManagerFactoryEntry(fs::path(cli.kv["game_manager"]).stem().string());
     std::string err;
-    LoadedLib lib;
-    if (!dlopen_self_register(cli.kv["game_manager"], lib, err)) {
-        std::cerr << "Failed to load GameManager shared object: " << cli.kv["game_manager"] << "\nError: " << err << "\n";
-        return 1;
-    }
-    gmReg.validateLastRegistration();
-    gmReg.updateGameManagerCount();
-    gmLibs.push_back(lib);
-    std::cout << "Registered GameManager: " << gmReg.getGameManagerFactory(gmReg.getGameManagerCount() - 1).name() << "\n";
-
     for(const auto& algoSO : list_shared_objects(cli.kv["algorithms_folder"])) {
         std::string err;
         LoadedLib lib;
@@ -85,8 +69,31 @@ int CompetitionMode::openSOFiles(Cli cli ,std::vector<LoadedLib> algoLibs, std::
         usage("algorithms_folder must contain at least two algorithms.");
         return 1;
     }
+    return 0;
+}
+
+int CompetitionMode::registerGameManager(Cli cli, std::vector<LoadedLib> gmLibs){
+    auto& gmReg = GameManagerRegistrar::getGameManagerRegistrar();
+    gmReg.initializeGameManagerCount();
+    if (!file_exists(cli.kv["game_manager"])) {
+        usage("game_manager not found: " + cli.kv["game_manager"]);
+        return 1;
+    }
+    gmReg.createGameManagerFactoryEntry(fs::path(cli.kv["game_manager"]).stem().string());
+    std::string err;
+    LoadedLib lib;
+    if (!dlopen_self_register(cli.kv["game_manager"], lib, err)) {
+        std::cerr << "Failed to load GameManager shared object: " << cli.kv["game_manager"] << "\nError: " << err << "\n";
+        return 1;
+    }
+    gmReg.validateLastRegistration();
+    gmReg.updateGameManagerCount();
+    gmLibs.push_back(lib);
     return 0;    
 }
+
+
+
 
 
 void CompetitionMode::add_relaxed(std::atomic<size_t>& x, size_t d) {

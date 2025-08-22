@@ -53,30 +53,74 @@ RanGame run_single_game(const GameArgs& g, bool verbose) {
     // 3) Players for each side (initial x,y are placeholders; GM/Player usually handle placement using the SatelliteView)
     std::unique_ptr<Player> p1 = make_player(g.playerAndAlgoFactory1ID, /*player_index=*/1, g.map_width, g.map_height, g.max_steps, g.num_shells);
     std::unique_ptr<Player> p2 = make_player(g.playerAndAlgoFactory2ID, /*player_index=*/2, g.map_width, g.map_height, g.max_steps, g.num_shells);
-
-    
-    for(int i = 0; i < g.map_width; ++i) {
-        for(int j = 0; j < g.map_height; ++j) {
-            std::cout << g.map->getObjectAt(i, j);
-        }
-        std::cout << "\n";
-    }
-
-    std::cout << "Running game with GameManager: " << g.GameManagerName
-              << ", Map: " << g.map_name
-              << ", Player 1: " << g.player1Name
-              << ", Player 2: " << g.player2Name
-             << ", Max Steps: " << g.max_steps << " Width: " << g.map_width << " Height: " << g.map_height <<"\n";
-
+  
+    // 4) Run the game
     GameResult res = gm->run(
         g.map_width, g.map_height,
-        std::move(*g.map),                      // const SatelliteView&
+        std::move(*g.map),                      
         g.map_name,
         g.max_steps, g.num_shells,
         *p1, g.player1Name, *p2, g.player2Name,
         f1, f2
     );
-    std::cout << "Game finished: " << "aaaaaaaaaaa" << "\n";
-    std::string gameFinalState = satelliteViewToString(*res.gameState , g.map_width, g.map_height); // Assuming SatelliteView has a toString() method for final state
+    std::string gameFinalState = satelliteViewToString(*res.gameState , g.map_width, g.map_height);
     return RanGame{ g.GameManagerName, g.map_name, g.playerAndAlgoFactory1ID, g.playerAndAlgoFactory2ID, std::move(res), gameFinalState };
 }
+
+
+void runThreads(std::unique_ptr<AbstractMode>& mode, std::vector<GameArgs> jobs, int num_threads, bool verbose) {
+    std::atomic<size_t> next{0};
+    const size_t n = jobs.size();    
+    auto worker = [&] {
+        while (true) {
+            size_t i = next.fetch_add(1, std::memory_order_relaxed);
+            if (i >= n) break;
+            RanGame result = run_single_game(jobs[i], verbose); 
+            mode->applyCompetitionScore(jobs[i], std::move(result.result), result.gameFinalState);
+        }
+    };
+
+    std::vector<std::thread> threads;
+    for (int t = 0; t < num_threads; ++t) {
+        threads.emplace_back(worker);
+    }
+    for (auto& th : threads) {
+        th.join();
+    }
+}
+
+
+void runAllGames(std::unique_ptr<AbstractMode>& mode, std::vector<GameArgs> jobs, bool verbose) {
+    for(const auto& g: jobs) {
+        std::cout << "Running game: " << g.GameManagerName << " vs " << g.map_name << "\n";
+        RanGame rg = run_single_game(g, verbose);
+        std::cout << "Winner: " << rg.result.winner << "\n";
+        mode->applyCompetitionScore(g, std::move(rg.result), rg.gameFinalState);
+    }
+}
+
+
+std::unique_ptr<AbstractMode> createMode(Cli cli, std::vector<std::string> &maps) {
+    std::unique_ptr<AbstractMode> mode;
+    if (cli.mode == Cli::Comparative) {
+        const char* reqs[]={"game_map","game_managers_folder","algorithm1","algorithm2"};
+        for (auto* r: reqs) if (!cli.kv.count(r)) { usage(std::string("Missing ") + r); return nullptr; }
+        if (!file_exists(cli.kv["game_map"])) { usage("game_map not found: " + cli.kv["game_map"]); return nullptr; }
+        if (!dir_exists(cli.kv["game_managers_folder"])) { usage("game_managers_folder missing/not dir: " + cli.kv["game_managers_folder"]); return nullptr; }
+        maps.push_back(cli.kv["game_map"]);
+        std::cout << "Game map to be used: " << maps[0] << "\n";
+        mode = std::make_unique<ComparativeMode>();
+        // (Pass chosen algos to your ComparativeMode as needed.)
+    } else {
+        const char* reqs[]={"game_maps_folder","game_manager","algorithms_folder"};
+        for (auto* r: reqs) if (!cli.kv.count(r)) { usage(std::string("Missing ") + r); return nullptr; }
+        if (!dir_exists(cli.kv["game_maps_folder"])) { usage("game_maps_folder missing/not dir: " + cli.kv["game_maps_folder"]); return nullptr; }
+        if (!dir_exists(cli.kv["algorithms_folder"])) { usage("algorithms_folder missing/not dir: " + cli.kv["algorithms_folder"]); return nullptr; }
+        maps = list_files(cli.kv["game_maps_folder"]);
+        if (maps.empty()) { usage("game_maps_folder has no files."); return nullptr; }
+        mode = std::make_unique<CompetitionMode>();
+        // (Pass chosen GM to your CompetitionMode as needed.)
+    }
+    return mode;
+}
+

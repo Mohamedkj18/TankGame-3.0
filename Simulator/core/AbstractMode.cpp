@@ -1,67 +1,32 @@
 #include "AbstractMode.h"
 
 
-ParsedMap AbstractMode::parseBattlefieldFile(const std::string& filename) {
-    std::ifstream in(filename);
-    if (!in) {
-        throw std::runtime_error("Cannot open map file: " + filename);
-    }
-
-    ParsedMap result;
-
+static void readTheGrid(std::ifstream& in, size_t height, size_t width,
+    std::set<std::pair<size_t, size_t>>& p1tanks,
+    std::set<std::pair<size_t, size_t>>& p2tanks,
+    std::set<std::pair<size_t, size_t>>& mines,
+    std::set<std::pair<size_t, size_t>>& walls) 
+{
     std::string line;
-
-    // 1. Battlefield name (skip or store if needed)
-    std::getline(in, line); // e.g. "1-Small battlefield"
-
-    // 2. MaxSteps
-    std::getline(in, line);
-    {
-        auto pos = line.find('=');
-        result.max_steps = std::stoul(line.substr(pos + 1));
-    }
-
-    // 3. NumShells
-    std::getline(in, line);
-    {
-        auto pos = line.find('=');
-        result.num_shells = std::stoul(line.substr(pos + 1));
-    }
-
-    // 4. Rows
-    std::getline(in, line);
-    {
-        auto pos = line.find('=');
-        result.map_height = std::stoul(line.substr(pos + 1));
-    }
-
-    // 5. Cols
-    std::getline(in, line);
-    {
-        auto pos = line.find('=');
-        result.map_width = std::stoul(line.substr(pos + 1));
-    }
-
-    // 6. Read the grid
-    for (size_t row = 0; row < result.map_height; ++row) {
+    for (size_t row = 0; row < height; ++row) {
         if (!std::getline(in, line)) {
             throw std::runtime_error("Unexpected end of file while reading grid");
         }
 
-        for (size_t col = 0; col < line.size() && col < result.map_width; ++col) {
+        for (size_t col = 0; col < line.size() && col < width; ++col) {
             char c = line[col];
             switch (c) {
                 case '1':
-                    result.player1tanks.emplace(row, col);
+                    p1tanks.emplace(row, col);
                     break;
                 case '2':
-                    result.player2tanks.emplace(row, col);
+                    p2tanks.emplace(row, col);
                     break;
                 case '@':
-                    result.mines.emplace(row, col);
+                    mines.emplace(row, col);
                     break;
                 case '#':
-                    result.walls.emplace(row, col);
+                    walls.emplace(row, col);
                     break;
                 default:
                     break; // ignore spaces or other chars
@@ -69,6 +34,45 @@ ParsedMap AbstractMode::parseBattlefieldFile(const std::string& filename) {
         }
     }
 
+}
+
+
+ParsedMap AbstractMode::parseBattlefieldFile(const std::string& filename) {
+    std::ifstream in(filename);
+    if (!in) {
+        throw std::runtime_error("Cannot open map file: " + filename);
+    }
+    ParsedMap result;
+    std::string line;
+    // 1. Battlefield name (skip or store if needed)
+    std::getline(in, line); // e.g. "1-Small battlefield"
+    // 2. MaxSteps
+    std::getline(in, line);
+    {
+        auto pos = line.find('=');
+        result.max_steps = std::stoul(line.substr(pos + 1));
+    }
+    // 3. NumShells
+    std::getline(in, line);
+    {
+        auto pos = line.find('=');
+        result.num_shells = std::stoul(line.substr(pos + 1));
+    }
+    // 4. Rows
+    std::getline(in, line);
+    {
+        auto pos = line.find('=');
+        result.map_height = std::stoul(line.substr(pos + 1));
+    }
+    // 5. Cols
+    std::getline(in, line);
+    {
+        auto pos = line.find('=');
+        result.map_width = std::stoul(line.substr(pos + 1));
+    }
+    // 6. Read the grid
+    readTheGrid(in, result.map_height, result.map_width,
+        result.player1tanks, result.player2tanks, result.mines, result.walls);
     return result;
 }
 
@@ -79,4 +83,8 @@ std::string AbstractMode::unique_time_str() {
     const auto ms  = duration_cast<milliseconds>(now.time_since_epoch()).count();
     return std::to_string(ms); // simple and collision-safe enough for this assignment
 }
+
+
+
+
 

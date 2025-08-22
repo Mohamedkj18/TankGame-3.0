@@ -38,6 +38,8 @@ class ComparativeMode: public AbstractMode {
     ~ComparativeMode() override = default;
     std::vector<GameArgs> getAllGames(std::vector<std::string> game_maps) override ;
     int openSOFiles(Cli cli, std::vector<LoadedLib> algoLibs, std::vector<LoadedLib> gmLibs) override;
+    int register2Algorithms(Cli cli, std::vector<LoadedLib> algoLibs);
+    int registerGameManagers(Cli cli, std::vector<LoadedLib> gmLibs);
     void applyCompetitionScore(const GameArgs& g, GameResult res, std::string finalGameState) override ;
     void writeComparativeResults(const std::string& game_managers_folder, const std::string& game_map_filename, const std::string& algorithm1_so, const std::string& algorithm2_so);
 

@@ -12,6 +12,8 @@ class CompetitionMode: public AbstractMode {
     ~CompetitionMode() override = default;
     std::vector<GameArgs> getAllGames(std::vector<std::string> game_maps) override ;
     int openSOFiles(Cli cli, std::vector<LoadedLib> algoLibs, std::vector<LoadedLib> gmLibs) override;
+    int registerAlgorithms(Cli cli, std::vector<LoadedLib> algoLibs);
+    int registerGameManager(Cli cli, std::vector<LoadedLib> gmLibs);
     void applyCompetitionScore(const GameArgs& g, GameResult res, std::string finalGameState) override ;
     void add_relaxed(std::atomic<size_t>& x, size_t d);
     std::vector<std::pair<std::string, size_t>> build_sorted_score_table();

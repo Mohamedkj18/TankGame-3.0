@@ -6,6 +6,8 @@
 #include "GameManagerRegistrar.h"
 #include "AlgorithmRegistrar.h"
 #include "common/GameResult.h"
+#include <thread>
+#include <atomic>
 
 struct RanGame {
     std::string gm_name;
@@ -20,3 +22,6 @@ std::unique_ptr<Player> make_player(size_t algo_id, int player_index, size_t x, 
 RanGame run_single_game(const GameArgs& g, bool verbose);
 void openSOFilesCompetitionMode(Cli cli, std::vector<LoadedLib>& algoLibs, std::vector<LoadedLib>& gmLibs);
 std::string satelliteViewToString(const SatelliteView& view, size_t width, size_t height);
+void runThreads(std::unique_ptr<AbstractMode>& mode, std::vector<GameArgs> jobs, int num_threads, bool verbose);
+void runAllGames(std::unique_ptr<AbstractMode>& mode, std::vector<GameArgs> jobs, bool verbose);
+std::unique_ptr<AbstractMode> createMode(Cli cli, std::vector<std::string> &maps);

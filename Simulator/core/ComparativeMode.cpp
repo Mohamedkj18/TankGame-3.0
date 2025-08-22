@@ -13,7 +13,9 @@ std::vector<GameArgs> ComparativeMode::getAllGames(std::vector<std::string> game
     std::string player1Name = algorithmRegistrar.begin()->second.name();
     std::string player2Name = algorithmRegistrar.rbegin()->second.name();
     // Iterate through all registered game managers
+    std::cout << "[DEBUG] "<< game_maps.size() << std::endl;
     struct ParsedMap parsedMap = parseBattlefieldFile(game_maps[0]);
+    std::cout << "Parsed map: " << game_maps[0] << " with dimensions " << parsedMap.map_width << "x" << parsedMap.map_height << "\n";
     for (size_t i = 0; i < gameManagerRegistrar.getGameManagerCount(); i++) {
         if(gameManagerRegistrar.gameManagers.count(i)){
         auto& gameManagerFactory = gameManagerRegistrar.getGameManagerFactory(i);
@@ -39,10 +41,14 @@ std::vector<GameArgs> ComparativeMode::getAllGames(std::vector<std::string> game
 }
 
 
-int ComparativeMode::openSOFiles(Cli cli, std::vector<LoadedLib> algoLibs, std::vector<LoadedLib> gmLibs) {
-    std::map<std::string,std::atomic<size_t>> gameManagersNames;
-    auto& gmReg = GameManagerRegistrar::getGameManagerRegistrar();
-    gmReg.initializeGameManagerCount();
+int ComparativeMode::openSOFiles(Cli cli, std::vector<LoadedLib> algoLibs, std::vector<LoadedLib> gmLibs) {    
+    if(register2Algorithms(cli, algoLibs))return 1;
+    if(registerGameManagers(cli, gmLibs))return 1;
+    return 0;
+}
+
+
+int ComparativeMode::register2Algorithms(Cli cli, std::vector<LoadedLib> algoLibs){
     auto& algoReg = AlgorithmRegistrar::getAlgorithmRegistrar();
     algoReg.initializeAlgoID();
     std::string err;
@@ -52,21 +58,18 @@ int ComparativeMode::openSOFiles(Cli cli, std::vector<LoadedLib> algoLibs, std::
         return 1;
     }
     algoReg.createAlgorithmFactoryEntry(fs::path(cli.kv["algorithm1"]).stem().string());
-    
     if (!dlopen_self_register(cli.kv["algorithm1"], lib1, err)) {
         std::cerr << "Failed to load Algorithm shared object: " << cli.kv["algorithm1"] << "\nError: " << err << "\n";
         return 1;
     }
+
+
     algoReg.validateLastRegistration();
     algoReg.updateAlgoID();
     std::cout << "Registered Algorithm: " << algoReg.getPlayerAndAlgoFactory(algoReg.getAlgoID() - 1).name() << "\n";
 
-    
     algoReg.createAlgorithmFactoryEntry(fs::path(cli.kv["algorithm2"]).stem().string());
-    
-    
-    
-    std::cout << "Registered Algorithm: " << algoReg.getPlayerAndAlgoFactory(algoReg.getAlgoID() - 1).name() << "\n";
+     
     if (!dlopen_self_register(cli.kv["algorithm2"], lib2, err)) {
         std::cerr << "Failed to load Algorithm shared object: " << cli.kv["algorithm2"] << "\nError: " << err << "\n";
         return 1;
@@ -75,13 +78,19 @@ int ComparativeMode::openSOFiles(Cli cli, std::vector<LoadedLib> algoLibs, std::
     algoReg.updateAlgoID();
     std::cout << "Registered Algorithm: " << algoReg.getPlayerAndAlgoFactory(algoReg.getAlgoID() - 1).name() << "\n";
 
-
     if (algoReg.count() < 2) {
         usage("algorithms_folder must contain at least two algorithms.");
         return 1;
     }
     algoLibs.push_back(lib1);
     algoLibs.push_back(lib2);
+    return 0;
+}
+
+
+int ComparativeMode::registerGameManagers(Cli cli, std::vector<LoadedLib> gmLibs){
+    auto& gmReg = GameManagerRegistrar::getGameManagerRegistrar();
+    gmReg.initializeGameManagerCount();
     for(const auto& gameManagerSO : list_shared_objects(cli.kv["game_managers_folder"])) {
         std::string gameManagerName = fs::path(gameManagerSO).stem().string();
         gmReg.createGameManagerFactoryEntry(gameManagerName);
@@ -95,15 +104,15 @@ int ComparativeMode::openSOFiles(Cli cli, std::vector<LoadedLib> algoLibs, std::
         gmReg.validateLastRegistration();
         gmReg.updateGameManagerCount();
         gmLibs.push_back(lib);
-
         std::cout << "Registered GameManager: " << gmReg.getGameManagerFactory(gmReg.getGameManagerCount() - 1).name() << "\n";
         }
     if (gmReg.getGameManagerCount() == 0) {
         usage("game_managers_folder must contain at least one game manager.");
         return 1;
-    }
+        }
     return 0;
 }
+
 
 
 
@@ -160,101 +169,107 @@ static inline const char* winnerToStr(int w) {
 }
 
 
-
-
-
-void ComparativeMode::writeComparativeResults(const std::string& game_managers_folder,
+static bool printHeader(std::ostream& out,
+    const std::string& game_managers_folder,
     const std::string& game_map_filename,
     const std::string& algorithm1_so,
-    const std::string& algorithm2_so)
-{
+    const std::string& algorithm2_so, std::string out_path, int groups_size){
+    out << "=== Comparative Mode Results ===\n";
+    out << "Map: " << basename_of(game_map_filename) << "\n";
+    out << "Algorithm 1: " << basename_of(algorithm1_so) << "\n";
+    out << "Algorithm 2: " << basename_of(algorithm2_so) << "\n";
+    out << "Game Managers folder: " << game_managers_folder << "\n";
+    out << "Total distinct outcome groups: " << groups_size << "\n\n";
+    if (groups_size == 0) {
+        out << "(No results)\n";
+        std::cout << "Comparative results written to " << out_path << "\n";
+        return false;
+        }
+    return true;
+}
+
+
+static void printBody(std::ostream& out,
+    const ComparativeKey& key,
+     std::vector<std::string>& gm_list,
+    const ComparativeKey& rep) {
+    std::sort(gm_list.begin(), gm_list.end()); 
+    out << "---- Group ----\n";
+    out << "Winner: " << winnerToStr(key.winner)
+        << "  |  Reason: " << reasonToStr(key.reason)
+        << "  |  Rounds: " << key.rounds
+        << "  |  GameManagers: " << gm_list.size() << "\n";
+
+    // Managers
+    out << "Managers: ";
+    for (size_t i = 0; i < gm_list.size(); ++i) {
+        if (i) out << ", ";
+        out << gm_list[i];
+    }
+    out << "\n";
+
+    // Final board (representative)
+    out << "Final board:\n";
+    if (!rep.finalBoard.empty()) {
+        out << rep.finalBoard;
+        if (rep.finalBoard.back() != '\n') out << "\n";
+    } else {
+        out << "(no board captured)\n";
+    }
+
+    out << "\n"; // blank line between groups
+}
+
+static void sortingHelperFunc(std::vector<std::pair<ComparativeKey, std::vector<std::string>>> & groups) {
+    std::sort(groups.begin(), groups.end(), [](const auto& a, const auto& b) {
+        const auto& ka = a.first; const auto& kb = b.first;
+        if (ka.winner != kb.winner) return ka.winner < kb.winner;
+        if (ka.reason != kb.reason) return static_cast<int>(ka.reason) < static_cast<int>(kb.reason);
+        if (ka.rounds != kb.rounds) return ka.rounds < kb.rounds;
+        if (a.second.size() != b.second.size()) return a.second.size() > b.second.size();
+        return ka.finalBoard < kb.finalBoard;
+        });
+}
+
+
+
+void ComparativeMode::writeComparativeResults(const std::string& game_managers_folder, const std::string& game_map_filename, const std::string& algorithm1_so, const std::string& algorithm2_so){
 // Snapshot maps under lock (in case worker threads still exist upstream).
-std::vector<std::pair<ComparativeKey, std::vector<std::string>>> groups;
-{
-std::lock_guard<std::mutex> lk(clusters_mtx);
-groups.reserve(gmNamesAndResults.size());
-for (const auto& [key, gm_list] : gmNamesAndResults) {
-groups.emplace_back(key, gm_list);
-}
-}
-
-// Sort groups: by winner, reason, rounds, then descending #GMs (stable view)
-std::sort(groups.begin(), groups.end(),
-[](const auto& a, const auto& b) {
-const auto& ka = a.first; const auto& kb = b.first;
-if (ka.winner != kb.winner) return ka.winner < kb.winner;
-if (ka.reason != kb.reason) return static_cast<int>(ka.reason) < static_cast<int>(kb.reason);
-if (ka.rounds != kb.rounds) return ka.rounds < kb.rounds;
-if (a.second.size() != b.second.size()) return a.second.size() > b.second.size();
-return ka.finalBoard < kb.finalBoard;
-});
-
-// Output file
-const std::string out_path =
-game_managers_folder + "/comparative_results_" + unique_time_str() + ".txt";
-std::ofstream out(out_path);
-if (!out) {
-throw std::runtime_error("Failed to open output file: " + out_path);
-}
-
-// Header
-out << "=== Comparative Mode Results ===\n";
-out << "Map: " << basename_of(game_map_filename) << "\n";
-out << "Algorithm 1: " << basename_of(algorithm1_so) << "\n";
-out << "Algorithm 2: " << basename_of(algorithm2_so) << "\n";
-out << "Game Managers folder: " << game_managers_folder << "\n";
-out << "Total distinct outcome groups: " << groups.size() << "\n\n";
-
-if (groups.empty()) {
-out << "(No results)\n";
-out.close();
-std::cout << "Comparative results written to " << out_path << "\n";
-return;
+    std::vector<std::pair<ComparativeKey, std::vector<std::string>>> groups;{
+    groups.reserve(gmNamesAndResults.size());
+    for (const auto& [key, gm_list] : gmNamesAndResults) {
+        groups.emplace_back(key, gm_list);
+        }
+    }
+    // Sort groups: by winner, reason, rounds, then descending #GMs (stable view)
+    sortingHelperFunc(groups);
+    // Output file
+    const std::string out_path = game_managers_folder + "/comparative_results_" + unique_time_str() + ".txt";
+    std::ofstream out(out_path);
+    if (!out) throw std::runtime_error("Failed to open output file: " + out_path);
+    // Header
+    printHeader(out, game_managers_folder, game_map_filename, algorithm1_so, algorithm2_so, out_path, groups.size());
+    if (!printHeader(out, game_managers_folder, game_map_filename, algorithm1_so, algorithm2_so, out_path, groups.size())) {
+        out.close();
+        return;
+        }
+    // Body
+    for (auto& [key, gm_list] : groups) {
+    // Representative (from gamesResults if present; fallback to key)
+    ComparativeKey rep;{
+        std::lock_guard<std::mutex> lk(clusters_mtx);
+        auto it = gamesResults.find(key);
+        rep = (it != gamesResults.end()) ? it->second : key;
+    }
+    printBody(out, key, gm_list, rep);
+    }
+    out.close();
+    std::cout << "Comparative results written to " << out_path << "\n";
 }
 
-// Body
-size_t idx = 0;
-for (auto& [key, gm_list] : groups) {
-++idx;
 
-// Representative (from gamesResults if present; fallback to key)
-ComparativeKey rep;
-{
-std::lock_guard<std::mutex> lk(clusters_mtx);
-auto it = gamesResults.find(key);
-rep = (it != gamesResults.end()) ? it->second : key;
-}
 
-std::sort(gm_list.begin(), gm_list.end()); // stable, readable order
 
-out << "---- Group " << idx << " ----\n";
-out << "Winner: " << winnerToStr(key.winner)
-<< "  |  Reason: " << reasonToStr(key.reason)
-<< "  |  Rounds: " << key.rounds
-<< "  |  GameManagers: " << gm_list.size() << "\n";
 
-// Managers
-out << "Managers: ";
-for (size_t i = 0; i < gm_list.size(); ++i) {
-if (i) out << ", ";
-out << gm_list[i];
-}
-out << "\n";
 
-// Final board (representative)
-out << "Final board:\n";
-if (!rep.finalBoard.empty()) {
-out << rep.finalBoard;
-if (rep.finalBoard.back() != '\n') out << "\n";
-} else {
-out << "(no board captured)\n";
-}
 
-out << "\n"; // blank line between groups
-}
-
-// Footer (optional legend)
-out << "Legend: '1' - P1 tank, '2' - P2 tank, '#' - wall, '@' - mine, ' ' - empty\n";
-out.close();
-std::cout << "Comparative results written to " << out_path << "\n";
-}
