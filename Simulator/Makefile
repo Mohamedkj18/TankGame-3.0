@@ -12,48 +12,47 @@ SRC_DIR    := $(ROOT_DIR)/core
 BUILD_DIR  := $(ROOT_DIR)/build
 OBJ_DIR    := $(BUILD_DIR)/obj
 
-# ---- Include search paths (headers only) ----
-# Keep the simulator lean: do NOT compile ../common or ../UserCommon sources here.
+# ---- Includes (headers only) ----
 INC_DIRS   := $(ROOT_DIR)/include .. ../common ../UserCommon
+INCS       := $(addprefix -I,$(INC_DIRS))
 
+# ---- Feature toggles ----
+# Use: make SAN=1  to enable Address/UB sanitizers (debug-only)
+SAN ?= 0
+
+# ---- Base flags ----
 CXXFLAGS  ?= -std=c++20 -O2 -Wall -Wextra -Wpedantic
-CXXFLAGS  += $(addprefix -I,$(INC_DIRS))
+CXXFLAGS  += $(INCS) -pthread
+LDFLAGS   ?=
+LDFLAGS   += -pthread
+LDLIBS    ?=
 
-# ---- Export the simulator's symbols so plugins can resolve registration APIs ----
+# ---- Export host symbols & rpath for plugins ----
 ifeq ($(UNAME_S),Darwin)
-  EXPORT_DYNAMIC := -Wl,-export_dynamic
-  RPATH_FLAGS    := -Wl,-rpath,@loader_path/..
-  LDLIBS_EXTRA   :=
+  LDFLAGS += -Wl,-export_dynamic -Wl,-rpath,@loader_path/..
 else ifeq ($(UNAME_S),Linux)
-  EXPORT_DYNAMIC := -Wl,--export-dynamic
-  RPATH_FLAGS    := -Wl,-rpath,'$$ORIGIN/..'
-  LDLIBS_EXTRA   := -ldl
-else
-  EXPORT_DYNAMIC :=
-  RPATH_FLAGS    :=
-  LDLIBS_EXTRA   :=
+  LDFLAGS += -Wl,--export-dynamic -Wl,-rpath,'$$ORIGIN/..'
+  LDLIBS  += -ldl
 endif
 
-LDFLAGS   ?=
-LDFLAGS   += $(EXPORT_DYNAMIC) $(RPATH_FLAGS)
-LDLIBS    ?=
-LDLIBS    += $(LDLIBS_EXTRA)
+# ---- Sanitizers (optional) ----
+ifeq ($(SAN),1)
+  CXXFLAGS += -fsanitize=address,undefined -fno-omit-frame-pointer -O1
+  LDFLAGS  += -fsanitize=address,undefined
+endif
 
 # ---- Sources (SIMULATOR ONLY) ----
-# Core sources + main
-CORE_SRCS   := $(shell find $(SRC_DIR) -name '*.cpp')
-MAIN_SRCS   := $(wildcard $(ROOT_DIR)/main.cpp)
+CORE_SRCS := $(shell find $(SRC_DIR) -name '*.cpp')
+MAIN_SRCS := $(wildcard $(ROOT_DIR)/main.cpp)
+REG_NAMES := PlayerRegistration TankAlgorithmRegistration GameManagerRegistration
+REG_SRCS  := $(foreach n,$(REG_NAMES), \
+                $(wildcard $(ROOT_DIR)/$(n).cpp) \
+                $(wildcard $(SRC_DIR)/$(n).cpp))
+SRCS      := $(CORE_SRCS) $(MAIN_SRCS) $(REG_SRCS)
 
-# Explicitly include registration implementations from either root or core:
-REG_NAMES   := PlayerRegistration TankAlgorithmRegistration GameManagerRegistration
-REG_SRCS    := $(foreach n,$(REG_NAMES), \
-                  $(wildcard $(ROOT_DIR)/$(n).cpp) \
-                  $(wildcard $(SRC_DIR)/$(n).cpp))
-
-SRCS        := $(CORE_SRCS) $(MAIN_SRCS) $(REG_SRCS)
-
-# ---- Objects ----
+# ---- Objects & deps ----
 OBJS := $(patsubst $(ROOT_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(filter $(ROOT_DIR)/%,$(SRCS)))
+DEPS := $(OBJS:.o=.d)
 
 # ---- Target ----
 BIN_NAME := simulator
@@ -63,15 +62,15 @@ BIN_PATH := $(BUILD_DIR)/$(BIN_NAME)
 
 all: $(BIN_PATH)
 
-# ---- Link the simulator ----
+# ---- Link ----
 $(BIN_PATH): $(OBJS)
 	@mkdir -p $(dir $@)
 	$(CXX) $(OBJS) $(LDFLAGS) $(LDLIBS) -o $@
 
-# ---- Compile rules ----
+# ---- Compile (with header deps) ----
 $(OBJ_DIR)/%.o: $(ROOT_DIR)/%.cpp
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
 
 # ---- Utilities ----
 print:
@@ -79,6 +78,7 @@ print:
 	@echo "BIN_PATH  = $(BIN_PATH)"
 	@echo "INC_DIRS  = $(INC_DIRS)"
 	@echo "REG_SRCS  = $(REG_SRCS)"
+	@echo "SAN       = $(SAN)"
 	@echo "SRCS:"; printf "  %s\n" $(SRCS)
 
 run: $(BIN_PATH)
@@ -95,3 +95,5 @@ clean:
 
 veryclean: clean
 	@rm -f $(BIN_PATH)
+
+-include $(DEPS)

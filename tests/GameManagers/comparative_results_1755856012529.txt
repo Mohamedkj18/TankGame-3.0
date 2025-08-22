@@ -1,0 +1,17 @@
+=== Comparative Mode Results ===
+Map: input_b.txt
+Algorithm 1: Algorithm_212788293_212497127.dylib
+Algorithm 2: Algorithm_212788293_212497128.dylib
+Game Managers folder: tests/GameManagers
+Total distinct outcome groups: 1
+
+---- Group 1 ----
+Winner: Draw  |  Reason: MAX_STEPS  |  Rounds: 5000  |  GameManagers: 3
+Managers: GameManager_212788293_212497126, GameManager_212788293_212497127, GameManager_212788293_212497127 copy
+Final board:
+          
+          
+          
+          
+
+Legend: '1' - P1 tank, '2' - P2 tank, '#' - wall, '@' - mine, ' ' - empty
