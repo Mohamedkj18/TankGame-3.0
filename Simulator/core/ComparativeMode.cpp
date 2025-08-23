@@ -13,9 +13,8 @@ std::vector<GameArgs> ComparativeMode::getAllGames(std::vector<std::string> game
     std::string player1Name = algorithmRegistrar.begin()->second.name();
     std::string player2Name = algorithmRegistrar.rbegin()->second.name();
     // Iterate through all registered game managers
-    std::cout << "[DEBUG] "<< game_maps.size() << std::endl;
+    try{
     struct ParsedMap parsedMap = parseBattlefieldFile(game_maps[0]);
-    std::cout << "Parsed map: " << game_maps[0] << " with dimensions " << parsedMap.map_width << "x" << parsedMap.map_height << "\n";
     for (size_t i = 0; i < gameManagerRegistrar.getGameManagerCount(); i++) {
         if(gameManagerRegistrar.gameManagers.count(i)){
         auto& gameManagerFactory = gameManagerRegistrar.getGameManagerFactory(i);
@@ -36,7 +35,12 @@ std::vector<GameArgs> ComparativeMode::getAllGames(std::vector<std::string> game
                 i // Game manager ID 
             });
 
-        }}
+        }
+    }
+    }catch(const std::exception& e){
+        usage("Error parsing map file: " + std::string(e.what()));
+        return {};
+        }
     return games;
 }
 
@@ -50,7 +54,6 @@ int ComparativeMode::openSOFiles(Cli cli, std::vector<LoadedLib> algoLibs, std::
 
 int ComparativeMode::register2Algorithms(Cli cli, std::vector<LoadedLib> algoLibs){
     auto& algoReg = AlgorithmRegistrar::getAlgorithmRegistrar();
-    algoReg.initializeAlgoID();
     std::string err;
     LoadedLib lib1 , lib2;
     if (!file_exists(cli.kv["algorithm1"]) || !file_exists(cli.kv["algorithm2"])) {
@@ -59,24 +62,22 @@ int ComparativeMode::register2Algorithms(Cli cli, std::vector<LoadedLib> algoLib
     }
     algoReg.createAlgorithmFactoryEntry(fs::path(cli.kv["algorithm1"]).stem().string());
     if (!dlopen_self_register(cli.kv["algorithm1"], lib1, err)) {
-        std::cerr << "Failed to load Algorithm shared object: " << cli.kv["algorithm1"] << "\nError: " << err << "\n";
+        usage("Failed to load Algorithm shared object: " + cli.kv["algorithm1"] + "\nError: " + err + "\n");
         return 1;
     }
 
 
     algoReg.validateLastRegistration();
     algoReg.updateAlgoID();
-    std::cout << "Registered Algorithm: " << algoReg.getPlayerAndAlgoFactory(algoReg.getAlgoID() - 1).name() << "\n";
 
     algoReg.createAlgorithmFactoryEntry(fs::path(cli.kv["algorithm2"]).stem().string());
      
     if (!dlopen_self_register(cli.kv["algorithm2"], lib2, err)) {
-        std::cerr << "Failed to load Algorithm shared object: " << cli.kv["algorithm2"] << "\nError: " << err << "\n";
+        usage("Failed to load Algorithm shared object: " + cli.kv["algorithm2"] + "\nError: " + err + "\n");
         return 1;
     }
     algoReg.validateLastRegistration();
     algoReg.updateAlgoID();
-    std::cout << "Registered Algorithm: " << algoReg.getPlayerAndAlgoFactory(algoReg.getAlgoID() - 1).name() << "\n";
 
     if (algoReg.count() < 2) {
         usage("algorithms_folder must contain at least two algorithms.");
@@ -90,7 +91,6 @@ int ComparativeMode::register2Algorithms(Cli cli, std::vector<LoadedLib> algoLib
 
 int ComparativeMode::registerGameManagers(Cli cli, std::vector<LoadedLib> gmLibs){
     auto& gmReg = GameManagerRegistrar::getGameManagerRegistrar();
-    gmReg.initializeGameManagerCount();
     for(const auto& gameManagerSO : list_shared_objects(cli.kv["game_managers_folder"])) {
         std::string gameManagerName = fs::path(gameManagerSO).stem().string();
         gmReg.createGameManagerFactoryEntry(gameManagerName);
@@ -104,7 +104,6 @@ int ComparativeMode::registerGameManagers(Cli cli, std::vector<LoadedLib> gmLibs
         gmReg.validateLastRegistration();
         gmReg.updateGameManagerCount();
         gmLibs.push_back(lib);
-        std::cout << "Registered GameManager: " << gmReg.getGameManagerFactory(gmReg.getGameManagerCount() - 1).name() << "\n";
         }
     if (gmReg.getGameManagerCount() == 0) {
         usage("game_managers_folder must contain at least one game manager.");
@@ -123,7 +122,6 @@ void ComparativeMode::applyCompetitionScore(const GameArgs& g, GameResult res, s
     ComparativeKey key{res.winner, res.reason, res.rounds, finalGameState};
 
     std::lock_guard<std::mutex> lk(clusters_mtx);
-    std::cout << "[DEBUG] Applying competition score for GameArgs" << std::endl;
               
     if(gmNamesAndResults.count(key) == 0) {
         // If this key is new, initialize the vector for GM names
@@ -182,7 +180,6 @@ static bool printHeader(std::ostream& out,
     out << "Total distinct outcome groups: " << groups_size << "\n\n";
     if (groups_size == 0) {
         out << "(No results)\n";
-        std::cout << "Comparative results written to " << out_path << "\n";
         return false;
         }
     return true;
@@ -264,7 +261,6 @@ void ComparativeMode::writeComparativeResults(const std::string& game_managers_f
     printBody(out, key, gm_list, rep);
     }
     out.close();
-    std::cout << "Comparative results written to " << out_path << "\n";
 }
 
 

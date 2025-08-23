@@ -24,9 +24,6 @@ int main(int argc, char** argv) {
     std::vector<std::string> maps;
     std::unique_ptr<AbstractMode> mode = createMode(cli, maps);
     if(!mode) return 1;
-
-
-    std::cout << "Using " << num_threads << " thread(s) for simulation.\n";
  
     // Load game managers
     std::vector<LoadedLib> gmLibs;
@@ -37,10 +34,8 @@ int main(int argc, char** argv) {
         return 1;
     }
 
-    std::cout << "Starting games...\n";
     std::vector<GameArgs> jobs = mode->getAllGames(maps);
     if (jobs.empty()) { std::cerr << "No games to run.\n"; return 0; }
-    std::cout << "Total games to run: " << jobs.size() << "\n";
     const size_t n = jobs.size();
     num_threads = std::min<size_t>(num_threads, n);
     

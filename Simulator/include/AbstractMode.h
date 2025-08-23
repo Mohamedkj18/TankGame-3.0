@@ -16,6 +16,8 @@
 #include <sstream>
 #include <stdexcept>
 #include <memory>
+#include <regex>
+
 
 struct GameArgs{
     size_t map_width,map_height,max_steps,num_shells;

@@ -30,7 +30,6 @@ std::string satelliteViewToString(const SatelliteView& view, size_t width, size_
         for (size_t x=0;x<width;x++) s.push_back(view.getObjectAt(x,y));
             s.push_back('\n');
     }
-    std::cout << "Satellite View String: " << s << "\n";
     return s;
 }
 
@@ -92,9 +91,7 @@ void runThreads(std::unique_ptr<AbstractMode>& mode, std::vector<GameArgs> jobs,
 
 void runAllGames(std::unique_ptr<AbstractMode>& mode, std::vector<GameArgs> jobs, bool verbose) {
     for(const auto& g: jobs) {
-        std::cout << "Running game: " << g.GameManagerName << " vs " << g.map_name << "\n";
         RanGame rg = run_single_game(g, verbose);
-        std::cout << "Winner: " << rg.result.winner << "\n";
         mode->applyCompetitionScore(g, std::move(rg.result), rg.gameFinalState);
     }
 }
@@ -108,7 +105,6 @@ std::unique_ptr<AbstractMode> createMode(Cli cli, std::vector<std::string> &maps
         if (!file_exists(cli.kv["game_map"])) { usage("game_map not found: " + cli.kv["game_map"]); return nullptr; }
         if (!dir_exists(cli.kv["game_managers_folder"])) { usage("game_managers_folder missing/not dir: " + cli.kv["game_managers_folder"]); return nullptr; }
         maps.push_back(cli.kv["game_map"]);
-        std::cout << "Game map to be used: " << maps[0] << "\n";
         mode = std::make_unique<ComparativeMode>();
         // (Pass chosen algos to your ComparativeMode as needed.)
     } else {

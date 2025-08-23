@@ -16,7 +16,8 @@ std::vector<GameArgs> CompetitionMode::getAllGames(std::vector<std::string> game
         std::set<std::pair<size_t, size_t>> assignedGames;
         const auto& game_map = game_maps[i];
         // Parse the map file to get the initial state
-        ParsedMap parsedMap = parseBattlefieldFile(game_map);
+        try{ParsedMap parsedMap = parseBattlefieldFile(game_map);
+        
         for(size_t j=0; j<algoCount; j++) {
             // Create game arguments for each algorithm
             auto satellite = std::make_unique<InitialSatellite>(parsedMap.player1tanks, parsedMap.player2tanks, parsedMap.walls, parsedMap.mines);
@@ -33,6 +34,11 @@ std::vector<GameArgs> CompetitionMode::getAllGames(std::vector<std::string> game
                 k, j, 0
             });
         }
+    }catch(const std::exception& e) {std::cerr << "Error parsing map file: " << e.what() << std::endl;}
+    }
+    if(games.empty()) {
+        usage("No valid games could be created. Please check the map files.");
+        throw std::runtime_error("No valid games could be created. Please check the map files.");
     }
     return games;
 }
@@ -48,7 +54,6 @@ int CompetitionMode::openSOFiles(Cli cli ,std::vector<LoadedLib> algoLibs, std::
 
 int CompetitionMode::registerAlgorithms(Cli cli, std::vector<LoadedLib> algoLibs){
     auto& algoReg = AlgorithmRegistrar::getAlgorithmRegistrar();
-    algoReg.initializeAlgoID();
     std::string err;
     for(const auto& algoSO : list_shared_objects(cli.kv["algorithms_folder"])) {
         std::string err;
@@ -63,7 +68,6 @@ int CompetitionMode::registerAlgorithms(Cli cli, std::vector<LoadedLib> algoLibs
         algoReg.updateAlgoID();
         algoLibs.push_back(lib);
         algoNamesAndScores[algoName] = 0; // Initialize score for this algorithm
-        std::cout << "Registered Algorithm: " << algoReg.getPlayerAndAlgoFactory(algoReg.getAlgoID() - 1).name() << "\n";
     }
     if (algoReg.count() < 2) {
         usage("algorithms_folder must contain at least two algorithms.");
@@ -74,7 +78,6 @@ int CompetitionMode::registerAlgorithms(Cli cli, std::vector<LoadedLib> algoLibs
 
 int CompetitionMode::registerGameManager(Cli cli, std::vector<LoadedLib> gmLibs){
     auto& gmReg = GameManagerRegistrar::getGameManagerRegistrar();
-    gmReg.initializeGameManagerCount();
     if (!file_exists(cli.kv["game_manager"])) {
         usage("game_manager not found: " + cli.kv["game_manager"]);
         return 1;
@@ -155,6 +158,5 @@ void CompetitionMode::writeCompetitionResults(const std::string& algorithms_fold
 
     if (!to_stdout) {
         out.flush();
-    std::cout << "Competition results written to: " << outpath << "\n";
     }
     }
