@@ -5,14 +5,14 @@
 CXX      ?= c++
 UNAME_S  := $(shell uname -s)
 
-# ---- Paths (adjust if your tree differs) ----
+# ---- Paths ----
 ROOT_DIR        := ..
 SIM_DIR         := $(ROOT_DIR)/Simulator
 COMMON_DIR      := $(ROOT_DIR)/common
 USERCOMMON_DIR  := $(ROOT_DIR)/UserCommon
 ALG_DIR         := $(ROOT_DIR)/Algorithm
 
-# Output: where the simulator expects plugin .dylib/.so files
+# Output: where the simulator expects plugin .dylib/.so/.dll files
 OUT_DIR         := $(ROOT_DIR)/tests/Algorithms
 
 # Build folders for objects
@@ -27,26 +27,30 @@ CXXFLAGS += $(addprefix -I,$(INC_DIRS))
 # ---- Platform-specific linker flags & extension ----
 ifeq ($(UNAME_S),Darwin)
   PLUG_EXT       := dylib
-  # For plugins that resolve some symbols from the host at runtime:
   PLUGIN_LDFLAGS := -dynamiclib -Wl,-undefined,dynamic_lookup
   LDLIBS         :=
 else ifeq ($(UNAME_S),Linux)
   PLUG_EXT       := so
   PLUGIN_LDFLAGS := -shared
   LDLIBS         :=
+else ifneq (,$(findstring MINGW,$(UNAME_S)))
+  # MinGW / Git Bash on Windows
+  PLUG_EXT       := dll
+  PLUGIN_LDFLAGS := -shared -Wl,--export-all-symbols
+  LDLIBS         :=
 else
+  # Fallback (other *nix); adjust if your simulator needs something else
   PLUG_EXT       := so
   PLUGIN_LDFLAGS := -shared
   LDLIBS         :=
 endif
 
 # ---- Sources ----
-# Collect your Algorithm sources
+# All .cpp under Algorithm/src (includes registration.cpp if present)
 ALG_SRCS := $(shell find $(ALG_DIR)/src -name '*.cpp')
 
-# If your algorithm needs specific sources from UserCommon (example below), list them here:
-# e.g., EXTRA_SRCS := $(USERCOMMON_DIR)/DirectionUtils.cpp
-EXTRA_SRCS := $(USERCOMMON_DIR)/DirectionUtils.cpp
+# Optional extras from UserCommon if they exist
+EXTRA_SRCS := $(wildcard $(USERCOMMON_DIR)/DirectionUtils.cpp)
 
 SRCS := $(ALG_SRCS) $(EXTRA_SRCS)
 
@@ -55,11 +59,12 @@ ALG_OBJS := $(patsubst %.cpp,$(OBJ_DIR)/%.o,$(SRCS))
 DEPS     := $(ALG_OBJS:.o=.d)
 
 # ---- Targets ----
-# Build two copies with the required IDs (matches your simulator’s expected filenames)
+# Build two copies with the required IDs (matches the simulator’s expected filenames)
 ALG_IDS  := 212788293_212497127 212788293_212497128
 ALG_BINS := $(addprefix $(OUT_DIR)/Algorithm_,$(addsuffix .$(PLUG_EXT),$(ALG_IDS)))
 
-.PHONY: all clean veryclean print
+.PHONY: all clean veryclean print sim
+
 all: $(ALG_BINS)
 
 # Link rule (same object set, different output names)
@@ -68,7 +73,6 @@ $(OUT_DIR)/Algorithm_%.$(PLUG_EXT): $(ALG_OBJS)
 	$(CXX) $(ALG_OBJS) $(PLUGIN_LDFLAGS) $(LDLIBS) -o $@
 
 # Compile rule: mirror original tree under build/obj
-# Handles sources both inside Algorithm/ and any listed in EXTRA_SRCS
 $(OBJ_DIR)/%.o: %.cpp
 	@mkdir -p $(dir $@)
 	$(CXX) $(CXXFLAGS) -MMD -MP -c $< -o $@
@@ -87,3 +91,14 @@ veryclean: clean
 	@rm -f $(ALG_BINS)
 
 -include $(DEPS)
+
+# ---- (Optional) Simulator convenience target ----
+# Build sim (if it has its own makefile) and remind how to run a match.
+sim:
+	@echo "Build your plugins with:  mingw32-make -C Algorithm  (or make -C Algorithm)"
+	@echo "Your plugins will be at:  $(OUT_DIR)/Algorithm_<ID>.$(PLUG_EXT)"
+	@echo "Now run the Simulator with those two plugins on the desired map."
+	@echo "Example (adjust path/flags to your Simulator CLI):"
+	@echo "  Simulator/bin/TanksGame --alg1 $(OUT_DIR)/Algorithm_212788293_212497127.$(PLUG_EXT) \\"
+	@echo "                          --alg2 $(OUT_DIR)/Algorithm_212788293_212497128.$(PLUG_EXT) \\"
+	@echo "                          --map  tests/Boards/empty.board --verbose"
