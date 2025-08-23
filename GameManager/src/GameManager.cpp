@@ -39,8 +39,6 @@ namespace
         return os.str();
     }
 
-
-  
 }
 
 namespace GameManager_212788293_212497127
@@ -186,7 +184,6 @@ namespace GameManager_212788293_212497127
         int tankId1 = 0;
         int tankId2 = 0;
         int globalTankId = 0;
-
         for (int y = 0; y < height; ++y)
         {
             for (int x = 0; x < width; ++x)
@@ -311,11 +308,12 @@ namespace GameManager_212788293_212497127
 
     void GameManager::advanceTank(Tank &tank)
     {
+        ActionRequest move = tank.getLastMove();
         tank.resetReverseState();
         if (tank.moveForward())
-            movesOfTanks[tank.getTankGlobalId()] = UC::to_string(tank.getLastMove());
+            movesOfTanks[tank.getTankGlobalId()] = UC::to_string(move);
         else
-            movesOfTanks[tank.getTankGlobalId()] = UC::to_string(tank.getLastMove()) + " (ignored)";
+            movesOfTanks[tank.getTankGlobalId()] = UC::to_string(move) + " (ignored)";
         checkForAMine(tank.getX(), tank.getY());
     }
 
@@ -386,7 +384,7 @@ namespace GameManager_212788293_212497127
             if (tank->getCantShoot())
             {
                 if (firstPass && move == ActionRequest::Shoot)
-                    movesOfTanks[tank->getTankGlobalId()] = UC::to_string(tank->getLastMove()) + " (ignored)";
+                    movesOfTanks[tank->getTankGlobalId()] = UC::to_string(move) + " (ignored)";
                 tank->incrementCantShoot();
                 if (tank->getCantShoot() == 8)
                     tank->resetCantShoot();
@@ -763,5 +761,3 @@ namespace GameManager_212788293_212497127
         wallsToRemove.clear();
     }
 }
-
-

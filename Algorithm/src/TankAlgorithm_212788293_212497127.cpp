@@ -8,7 +8,10 @@ namespace Algorithm_212788293_212497127
         {+1, 0}, {+1, +1}, {0, +1}, {-1, +1}, {-1, 0}, {-1, -1}, {0, -1}, {+1, -1}};
 
     TankAlgorithm_212788293_212497127::TankAlgorithm_212788293_212497127(int p, int t) noexcept
-        : player_idx_(p), tank_idx_(t) {}
+        : player_idx_(p), tank_idx_(t)
+    {
+        facing_idx_ = (player_idx_ == 1 ? 4 : 0);
+    }
 
     void TankAlgorithm_212788293_212497127::updateBattleInfo(::BattleInfo &info)
     {
@@ -63,7 +66,7 @@ namespace Algorithm_212788293_212497127
             // If your ActionRequest has GetBattleInfo, you can return it here.
             // Otherwise, we rotate deterministically to keep progress.
             // return ::ActionRequest::GetBattleInfo;
-            return ::ActionRequest::RotateLeft45;
+            return ::ActionRequest::GetBattleInfo;
         }
 
         // Prefer running the short script (plan) if present
