@@ -60,6 +60,7 @@ namespace GameManager_212788293_212497127
         std::ofstream moves_out;
         std::ofstream viz_out;
         std::string verbose_dir{"verbose"};
+        std::string visualization_dir{"visualization"};
 
     public:
         explicit GameManager(bool verbose);

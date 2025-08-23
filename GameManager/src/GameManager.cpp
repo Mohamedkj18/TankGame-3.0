@@ -720,9 +720,10 @@ namespace GameManager_212788293_212497127
         if (!verbose)
             return;
         std::filesystem::create_directories(verbose_dir);
+        std::filesystem::create_directories(visualization_dir);
         const auto base = make_unique_base(gmName, mapName, alg1Name, alg2Name);
         const auto moves_path = std::filesystem::path(verbose_dir) / (base + ".moves.txt");
-        const auto viz_path = std::filesystem::path(verbose_dir) / (base + ".viz.txt");
+        const auto viz_path = std::filesystem::path(visualization_dir) / (base + ".viz.txt");
         moves_out.open(moves_path, std::ios::out | std::ios::trunc);
         viz_out.open(viz_path, std::ios::out | std::ios::trunc);
     }
