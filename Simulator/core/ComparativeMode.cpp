@@ -161,7 +161,7 @@ static bool printHeader(std::ostream& out,
     const std::string& game_managers_folder,
     const std::string& game_map_filename,
     const std::string& algorithm1_so,
-    const std::string& algorithm2_so, std::string out_path, int groups_size){
+    const std::string& algorithm2_so, int groups_size){
     out << "=== Comparative Mode Results ===\n";
     out << "Map: " << basename_of(game_map_filename) << "\n";
     out << "Algorithm 1: " << basename_of(algorithm1_so) << "\n";
@@ -230,8 +230,8 @@ void ComparativeMode::writeComparativeResults(const std::string& game_managers_f
     const std::string out_path = game_managers_folder + "/comparative_results_" + unique_time_str() + ".txt";
     std::ofstream out(out_path);
     if (!out) throw std::runtime_error("Failed to open output file: " + out_path);
-    printHeader(out, game_managers_folder, game_map_filename, algorithm1_so, algorithm2_so, out_path, groups.size());
-    if (!printHeader(out, game_managers_folder, game_map_filename, algorithm1_so, algorithm2_so, out_path, groups.size())) {
+    printHeader(out, game_managers_folder, game_map_filename, algorithm1_so, algorithm2_so,  groups.size());
+    if (!printHeader(out, game_managers_folder, game_map_filename, algorithm1_so, algorithm2_so, groups.size())) {
         out.close();
         return;
         }

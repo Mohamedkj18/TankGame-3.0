@@ -103,7 +103,7 @@ void CompetitionMode::add_relaxed(std::atomic<size_t>& x, size_t d) {
     x.fetch_add(d, std::memory_order_relaxed);
 }
 
-void CompetitionMode::applyCompetitionScore(const GameArgs& g, GameResult r, std::string finalGameState) {
+void CompetitionMode::applyCompetitionScore(const GameArgs& g, GameResult r, std::string /*finalGameState*/) {
     const std::string a1 = g.player1Name;
     const std::string a2 = g.player2Name;
     switch (r.winner) {
