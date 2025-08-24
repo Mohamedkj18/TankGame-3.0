@@ -55,8 +55,9 @@ OBJS := $(patsubst $(ROOT_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(filter $(ROOT_DIR)/%,$(SRC
 DEPS := $(OBJS:.o=.d)
 
 # ---- Target ----
-BIN_NAME := simulator
+BIN_NAME := simulator_212788293_212497127
 BIN_PATH := $(BUILD_DIR)/$(BIN_NAME)
+
 
 .PHONY: all clean veryclean print run
 

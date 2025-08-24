@@ -23,11 +23,11 @@ static void fail(const std::string &msg, const std::string &filename)
 }
 
 
-static void reaTheGrid(std::string filename , std::ifstream &file, size_t map_height, size_t map_width,
-                        std::set<std::pair<size_t, size_t>> &player1tanks,
-                        std::set<std::pair<size_t, size_t>> &player2tanks,
+static void readTheGrid(std::string filename , std::ifstream &file, size_t map_height, size_t map_width,
+                        std::set<std::pair<size_t, size_t>> &walls,
                         std::set<std::pair<size_t, size_t>> &mines,
-                        std::set<std::pair<size_t, size_t>> &walls)
+                        std::set<std::pair<size_t, size_t>> player1tanks,
+                        std::set<std::pair<size_t, size_t>> &player2tanks)
 {
     std::string line;
     auto is_allowed = [](char c)
@@ -86,27 +86,32 @@ static void reaTheGrid(std::string filename , std::ifstream &file, size_t map_he
 }
 
 
-
-static size_t getParams(std::ifstream &file, const std::string &prefix, const std::string &filename)
+static size_t getParams(std::ifstream& file, const std::string& expected_key, const std::string& filename)
 {
     std::string line;
     if (!std::getline(file, line))
-        fail("Missing line starting with \"" + prefix + "\".", filename);
+        fail("Missing line for " + expected_key + ".", filename);
     chomp_cr(line);
-    {
-        std::regex rgx(prefix + R"(\s*=\s*(\d+))");
-        std::smatch m;
-        if (!std::regex_search(line, m, rgx))
-            fail("Bad " + prefix + " format.", filename);
-        if (m[1].str().empty())
-            fail(prefix + " value missing.", filename);
-        return std::stoul(std::regex_replace(line, std::regex(R"(.*=\s*)"), ""));
+
+
+    const std::string pattern = "^\\s*" + expected_key + "\\s*=\\s*([0-9]+)\\s*$";
+    std::regex re(pattern, std::regex::icase); 
+    std::smatch m;
+    if (!std::regex_match(line, m, re))
+        fail("Invalid line for " + expected_key + ": " + line, filename);
+
+    try {
+        return static_cast<size_t>(std::stoul(m[1].str()));
+    } catch (const std::exception&) {
+        fail("Invalid number for " + expected_key + ": " + m[1].str(), filename);
     }
+    return 0;
 }
 
 
 
-ParsedMap AbstractMode::parseBattlefieldFile(const std::string &filename)
+
+ParsedMap AbstractMode::parseBattlefieldFile(const std::string& filename)
 {
     ParsedMap parsed;
     std::ifstream file(filename);
@@ -117,24 +122,25 @@ ParsedMap AbstractMode::parseBattlefieldFile(const std::string &filename)
     if (!std::getline(file, line))
         fail("Missing line 1 (map name/description).", filename);
     chomp_cr(line);
+    // parsed.map_name = line; // if you keep the name
+
+    // Use the spec’d keys (case-insensitive due to getParams above)
+    parsed.max_steps  = getParams(file, "MaxSteps",  filename);
+    parsed.num_shells = getParams(file, "NumShells", filename);
+
+    parsed.map_height = getParams(file, "Rows", filename);
+    if (parsed.map_height == 0) fail("Rows must be >= 1.", filename);
+
+    parsed.map_width  = getParams(file, "Cols", filename);
+    if (parsed.map_width == 0)  fail("Cols must be >= 1.", filename);
 
 
-    parsed.max_steps = getParams(file, "max_steps", filename);
-
-
-    parsed.num_shells = getParams(file, "num_shells", filename);
-
-
-    parsed.map_height = getParams(file, "rows", filename);
-    if (parsed.map_height == 0)
-        fail("Rows must be >= 1.", filename);
-
-
-    parsed.map_width = getParams(file, "cols", filename);
-    if (parsed.map_width == 0)
-        fail("Cols must be >= 1.", filename);
-
-    reaTheGrid(filename, file, parsed.map_height, parsed.map_width, parsed.player1tanks, parsed.player2tanks, parsed.mines, parsed.walls);
+    readTheGrid( 
+        filename, file,
+        parsed.map_width, parsed.map_height,  
+        parsed.walls, parsed.mines,      
+        parsed.player1tanks, parsed.player2tanks
+    );
 
     return parsed;
 }
