@@ -25,3 +25,4 @@ std::string satelliteViewToString(const SatelliteView& view, size_t width, size_
 void runThreads(std::unique_ptr<AbstractMode>& mode, std::vector<GameArgs> jobs, int num_threads, bool verbose);
 void runAllGames(std::unique_ptr<AbstractMode>& mode, std::vector<GameArgs> jobs, bool verbose);
 std::unique_ptr<AbstractMode> createMode(Cli cli, std::vector<std::string> &maps);
+void runModeResults(AbstractMode* mode, Cli& cli);

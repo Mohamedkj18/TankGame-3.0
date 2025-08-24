@@ -1,6 +1,8 @@
 #pragma once
 
+#include <iostream>
 #include <unordered_map>
+#include <dlfcn.h>
 #include <string>
 #include <vector>
 #include <filesystem>
@@ -50,3 +52,4 @@ void usage(const std::string &err, const std::vector<std::string> &bad = {});
 bool file_exists(const std::string &p);
 bool dir_exists(const std::string &p);
 std::vector<std::string> list_files(const std::string &dir);
+int closeLoadedLibs(std::vector<LoadedLib>& libs);

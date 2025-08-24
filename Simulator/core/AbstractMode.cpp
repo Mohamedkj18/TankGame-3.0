@@ -7,7 +7,7 @@ std::string AbstractMode::unique_time_str()
     using namespace std::chrono;
     const auto now = system_clock::now();
     const auto ms = duration_cast<milliseconds>(now.time_since_epoch()).count();
-    return std::to_string(ms); // simple and collision-safe enough for this assignment
+    return std::to_string(ms); 
 }
 
 static inline void chomp_cr(std::string &s)

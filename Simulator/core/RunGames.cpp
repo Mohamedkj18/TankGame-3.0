@@ -37,23 +37,18 @@ std::string satelliteViewToString(const SatelliteView& view, size_t width, size_
 
 
 RanGame run_single_game(const GameArgs& g, bool verbose) {
-    // 1) GameManager by ID
     auto& gmReg = GameManagerRegistrar::getGameManagerRegistrar();
     auto it = gmReg.gameManagers.find(g.GameManagerID);
     if (it == gmReg.gameManagers.end() || !it->second.hasFactory()) {
         throw std::runtime_error("GameManager not found or not loadable: " + g.GameManagerName);
     }
-    std::unique_ptr<AbstractGameManager> gm = it->second.create(verbose);  // factory(verbose) under the hood 
-
-    // 2) Factories for the two algorithms
+    std::unique_ptr<AbstractGameManager> gm = it->second.create(verbose);
     TankAlgorithmFactory f1 = make_tank_factory(g.playerAndAlgoFactory1ID);
     TankAlgorithmFactory f2 = make_tank_factory(g.playerAndAlgoFactory2ID);
 
-    // 3) Players for each side (initial x,y are placeholders; GM/Player usually handle placement using the SatelliteView)
     std::unique_ptr<Player> p1 = make_player(g.playerAndAlgoFactory1ID, /*player_index=*/1, g.map_width, g.map_height, g.max_steps, g.num_shells);
     std::unique_ptr<Player> p2 = make_player(g.playerAndAlgoFactory2ID, /*player_index=*/2, g.map_width, g.map_height, g.max_steps, g.num_shells);
   
-    // 4) Run the game
     GameResult res = gm->run(
         g.map_width, g.map_height,
         std::move(*g.map),                      
@@ -106,7 +101,6 @@ std::unique_ptr<AbstractMode> createMode(Cli cli, std::vector<std::string> &maps
         if (!dir_exists(cli.kv["game_managers_folder"])) { usage("game_managers_folder missing/not dir: " + cli.kv["game_managers_folder"]); return nullptr; }
         maps.push_back(cli.kv["game_map"]);
         mode = std::make_unique<ComparativeMode>();
-        // (Pass chosen algos to your ComparativeMode as needed.)
     } else {
         const char* reqs[]={"game_maps_folder","game_manager","algorithms_folder"};
         for (auto* r: reqs) if (!cli.kv.count(r)) { usage(std::string("Missing ") + r); return nullptr; }
@@ -115,8 +109,15 @@ std::unique_ptr<AbstractMode> createMode(Cli cli, std::vector<std::string> &maps
         maps = list_files(cli.kv["game_maps_folder"]);
         if (maps.empty()) { usage("game_maps_folder has no files."); return nullptr; }
         mode = std::make_unique<CompetitionMode>();
-        // (Pass chosen GM to your CompetitionMode as needed.)
     }
     return mode;
+}
+
+void runModeResults(AbstractMode* mode, Cli& cli) {
+    if (auto* cm = dynamic_cast<CompetitionMode*>(mode)) 
+    cm->writeCompetitionResults(cli.kv["algorithms_folder"], cli.kv["game_maps_folder"], fs::path(cli.kv["game_manager"]).filename().string());
+
+if (auto* cm = dynamic_cast<ComparativeMode*>(mode)) 
+    cm->writeComparativeResults(cli.kv["game_managers_folder"], fs::path(cli.kv["game_map"]).filename().string(), fs::path(cli.kv["algorithm1"]).filename().string(), fs::path(cli.kv["algorithm2"]).filename().string());
 }
 

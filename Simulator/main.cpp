@@ -25,7 +25,6 @@ int main(int argc, char** argv) {
     std::unique_ptr<AbstractMode> mode = createMode(cli, maps);
     if(!mode) return 1;
  
-    // Load game managers
     std::vector<LoadedLib> gmLibs;
     std::vector<LoadedLib> algoLibs;
     
@@ -42,11 +41,13 @@ int main(int argc, char** argv) {
     if(num_threads > 1)runThreads(mode, std::move(jobs), num_threads, cli.verbose);
     else runAllGames(mode, std::move(jobs), cli.verbose); 
 
-    if (auto* cm = dynamic_cast<CompetitionMode*>(mode.get())) 
-        cm->writeCompetitionResults(cli.kv["algorithms_folder"], cli.kv["game_maps_folder"], fs::path(cli.kv["game_manager"]).filename().string());
+    runModeResults(mode.get(), cli);
     
-    if (auto* cm = dynamic_cast<ComparativeMode*>(mode.get())) 
-        cm->writeComparativeResults(cli.kv["game_managers_folder"], fs::path(cli.kv["game_map"]).filename().string(), fs::path(cli.kv["algorithm1"]).filename().string(), fs::path(cli.kv["algorithm2"]).filename().string());
-    
+    int close_failures = 0;
+    close_failures += closeLoadedLibs(algoLibs);
+    close_failures += closeLoadedLibs(gmLibs);
+    if (close_failures) {
+        std::cerr << "Note: " << close_failures << " plugin(s) failed to close cleanly.\n";
+        }
     return 0;
 }

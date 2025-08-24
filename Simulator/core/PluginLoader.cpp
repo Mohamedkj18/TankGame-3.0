@@ -96,3 +96,23 @@ std::vector<std::string> list_files(const std::string& dir){
     std::vector<std::string> v; for (auto& e: fs::directory_iterator(dir)) if (e.is_regular_file()) v.push_back(e.path().string());
     std::sort(v.begin(), v.end()); return v;
 }
+
+
+int closeLoadedLibs(std::vector<LoadedLib>& libs) {
+    int failures = 0;
+    for (auto it = libs.rbegin(); it != libs.rend(); ++it) {
+        if (!it->handle) continue;
+        if (dlclose(it->handle) != 0) {
+            const char* err = dlerror();
+            std::cerr << "Warning: dlclose failed for " << it->path
+                      << ": " << (err ? err : "unknown error") << "\n";
+            ++failures;
+        }
+        it->handle = nullptr;
+    }
+    libs.clear();
+    return failures;
+}
+
+
+

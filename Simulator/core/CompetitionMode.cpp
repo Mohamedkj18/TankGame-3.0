@@ -67,7 +67,7 @@ int CompetitionMode::registerAlgorithms(Cli cli, std::vector<LoadedLib> algoLibs
         algoReg.validateLastRegistration();
         algoReg.updateAlgoID();
         algoLibs.push_back(lib);
-        algoNamesAndScores[algoName] = 0; // Initialize score for this algorithm
+        algoNamesAndScores[algoName] = 0; 
     }
     if (algoReg.count() < 2) {
         usage("algorithms_folder must contain at least two algorithms.");
@@ -104,7 +104,7 @@ void CompetitionMode::add_relaxed(std::atomic<size_t>& x, size_t d) {
 }
 
 void CompetitionMode::applyCompetitionScore(const GameArgs& g, GameResult r, std::string finalGameState) {
-    const std::string a1 = g.player1Name; // your IDs from job building
+    const std::string a1 = g.player1Name;
     const std::string a2 = g.player2Name;
     switch (r.winner) {
         case 1:  add_relaxed(algoNamesAndScores[a1], 3); break;
@@ -124,8 +124,8 @@ std::vector<std::pair<std::string, size_t>> CompetitionMode::build_sorted_score_
     }
     std::sort(table.begin(), table.end(),
               [](const auto& a, const auto& b) {
-                  if (a.second != b.second) return a.second > b.second; // score desc
-                  return a.first < b.first; // tie-breaker: name asc (allowed by spec)
+                  if (a.second != b.second) return a.second > b.second; 
+                  return a.first < b.first;
               });
     return table;
 }
@@ -146,12 +146,10 @@ void CompetitionMode::writeCompetitionResults(const std::string& algorithms_fold
         to_stdout = true;
         }
 
-    // Header lines (exact text/ordering per assignment)
     (*sink) << "game_maps_folder=" << game_maps_folder << "\n";
     (*sink) << "game_manager="     << game_manager_so   << "\n";
-    (*sink) << "\n"; // blank line
+    (*sink) << "\n";
 
-    // Sorted table: "<algorithm name> <total score>"
     for (const auto& [name, score] : table) {
         (*sink) << name << " " << score << "\n";
         }

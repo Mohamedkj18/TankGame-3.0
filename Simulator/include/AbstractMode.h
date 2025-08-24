@@ -1,8 +1,5 @@
 #pragma once
 
-#include <iostream>
-#include <string>
-#include <vector>
 #include "common/SatelliteView.h"
 #include "common/Player.h"
 #include "common/AbstractGameManager.h"
