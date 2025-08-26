@@ -1,5 +1,0 @@
-game_maps_folder=tests/maps
-game_manager=GameManager_212788293_212497127.dylib
-
-Algorithm_212788293_212497128 39
-Algorithm_212788293_212497127 3

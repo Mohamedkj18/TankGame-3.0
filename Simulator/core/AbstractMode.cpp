@@ -1,13 +1,11 @@
 #include "AbstractMode.h"
 
-
-
 std::string AbstractMode::unique_time_str()
 {
     using namespace std::chrono;
     const auto now = system_clock::now();
     const auto ms = duration_cast<milliseconds>(now.time_since_epoch()).count();
-    return std::to_string(ms); 
+    return std::to_string(ms);
 }
 
 static inline void chomp_cr(std::string &s)
@@ -16,17 +14,15 @@ static inline void chomp_cr(std::string &s)
         s.pop_back();
 }
 
-
 static void fail(const std::string &msg, const std::string &filename)
 {
     throw std::runtime_error("Invalid map \"" + filename + "\": " + msg);
 }
 
-
-static void readTheGrid(std::string filename , std::ifstream &file, size_t map_height, size_t map_width,
+static void readTheGrid(std::string filename, std::ifstream &file, size_t map_height, size_t map_width,
                         std::set<std::pair<size_t, size_t>> &walls,
                         std::set<std::pair<size_t, size_t>> &mines,
-                        std::set<std::pair<size_t, size_t>> player1tanks,
+                        std::set<std::pair<size_t, size_t>> &player1tanks,
                         std::set<std::pair<size_t, size_t>> &player2tanks)
 {
     std::string line;
@@ -67,16 +63,16 @@ static void readTheGrid(std::string filename , std::ifstream &file, size_t map_h
             switch (c)
             {
             case '#':
-                    walls.insert({col, row});
+                walls.insert({col, row});
                 break;
             case '@':
-                    mines.insert({col, row});
+                mines.insert({col, row});
                 break;
             case '1':
-                    player1tanks.insert({col, row});
+                player1tanks.insert({col, row});
                 break;
             case '2':
-                    player2tanks.insert({col, row});
+                player2tanks.insert({col, row});
                 break;
             default: /* empty */
                 break;
@@ -85,33 +81,31 @@ static void readTheGrid(std::string filename , std::ifstream &file, size_t map_h
     }
 }
 
-
-static size_t getParams(std::ifstream& file, const std::string& expected_key, const std::string& filename)
+static size_t getParams(std::ifstream &file, const std::string &expected_key, const std::string &filename)
 {
     std::string line;
     if (!std::getline(file, line))
         fail("Missing line for " + expected_key + ".", filename);
     chomp_cr(line);
 
-
     const std::string pattern = "^\\s*" + expected_key + "\\s*=\\s*([0-9]+)\\s*$";
-    std::regex re(pattern, std::regex::icase); 
+    std::regex re(pattern, std::regex::icase);
     std::smatch m;
     if (!std::regex_match(line, m, re))
         fail("Invalid line for " + expected_key + ": " + line, filename);
 
-    try {
+    try
+    {
         return static_cast<size_t>(std::stoul(m[1].str()));
-    } catch (const std::exception&) {
+    }
+    catch (const std::exception &)
+    {
         fail("Invalid number for " + expected_key + ": " + m[1].str(), filename);
     }
     return 0;
 }
 
-
-
-
-ParsedMap AbstractMode::parseBattlefieldFile(const std::string& filename)
+ParsedMap AbstractMode::parseBattlefieldFile(const std::string &filename)
 {
     ParsedMap parsed;
     std::ifstream file(filename);
@@ -125,22 +119,21 @@ ParsedMap AbstractMode::parseBattlefieldFile(const std::string& filename)
     // parsed.map_name = line; // if you keep the name
 
     // Use the spec’d keys (case-insensitive due to getParams above)
-    parsed.max_steps  = getParams(file, "MaxSteps",  filename);
+    parsed.max_steps = getParams(file, "MaxSteps", filename);
     parsed.num_shells = getParams(file, "NumShells", filename);
 
     parsed.map_height = getParams(file, "Rows", filename);
-    if (parsed.map_height == 0) fail("Rows must be >= 1.", filename);
+    if (parsed.map_height == 0)
+        fail("Rows must be >= 1.", filename);
 
-    parsed.map_width  = getParams(file, "Cols", filename);
-    if (parsed.map_width == 0)  fail("Cols must be >= 1.", filename);
+    parsed.map_width = getParams(file, "Cols", filename);
+    if (parsed.map_width == 0)
+        fail("Cols must be >= 1.", filename);
 
-
-    readTheGrid( 
+    readTheGrid(
         filename, file,
-        parsed.map_width, parsed.map_height,  
-        parsed.walls, parsed.mines,      
-        parsed.player1tanks, parsed.player2tanks
-    );
+        parsed.map_height, parsed.map_width, parsed.walls, parsed.mines,
+        parsed.player1tanks, parsed.player2tanks);
 
     return parsed;
 }

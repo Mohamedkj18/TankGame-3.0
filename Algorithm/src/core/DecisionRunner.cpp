@@ -271,29 +271,6 @@ namespace Algorithm_212788293_212497127
 
         // Only trigger if truly stuck (no passable neighbor). Keeps normal logic otherwise.
         const bool stuck = !anyPassableNeighbor(wv, meCell);
-
-        if (stuck && surroundedByWalls(wv, meCell))
-        {
-            // Breacher: face a nearby wall and shoot (once aligned), avoiding friendly fire.
-            Cell wall{};
-            int wdir = 0;
-            if (pickAdjacentWall(wv, meCell, wall, wdir))
-            {
-                if (me.facing_deg == wdir)
-                {
-                    if (firstHitIsWallFacing(wv, tv, me))
-                        return ::ActionRequest::Shoot;
-                    // If something else is in front (friend/enemy/mine), prefer to rotate to shift lane
-                    return ::ActionRequest::RotateLeft45;
-                }
-                else
-                {
-                    return rotateStepToward(me.facing_deg, wdir);
-                }
-            }
-            // No adjacent wall after all? fall through to normal logic
-        }
-
         if (stuck && surroundedByMines(wv, meCell))
         {
             // Sniper: hold ground, rotate toward nearest enemy, shoot if clear (no friendly-fire).
@@ -336,6 +313,28 @@ namespace Algorithm_212788293_212497127
                 // No enemies visible: deterministic idle (rotate left) rather than moving onto mines.
                 return ::ActionRequest::RotateLeft45;
             }
+        }
+
+        else if (stuck)
+        {
+            // Breacher: face a nearby wall and shoot (once aligned), avoiding friendly fire.
+            Cell wall{};
+            int wdir = 0;
+            if (pickAdjacentWall(wv, meCell, wall, wdir))
+            {
+                if (me.facing_deg == wdir)
+                {
+                    if (firstHitIsWallFacing(wv, tv, me))
+                        return ::ActionRequest::Shoot;
+                    // If something else is in front (friend/enemy/mine), prefer to rotate to shift lane
+                    return ::ActionRequest::RotateLeft45;
+                }
+                else
+                {
+                    return rotateStepToward(me.facing_deg, wdir);
+                }
+            }
+            // No adjacent wall after all? fall through to normal logic
         }
 
         // 1) Shoot gate: if first thing ahead is an enemy, shoot (friendly-fire safe via TeamState).

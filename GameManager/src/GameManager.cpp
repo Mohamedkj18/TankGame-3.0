@@ -49,7 +49,7 @@ namespace GameManager_212788293_212497127
     // ------------------------ GameManager ------------------------
 
     GameManager::GameManager(bool verbose)
-        : verbose(verbose), verbose_dir("verbose")
+        : verbose(verbose)
     {
         gameStep = 0;
         totalShellsRemaining = 0;
@@ -715,6 +715,9 @@ namespace GameManager_212788293_212497127
                                        const std::string &alg1Name,
                                        const std::string &alg2Name)
     {
+        std::cout << "Verbose mode is " << (verbose ? "ON" : "OFF") << "\n";
+        std::cout << "Verbose dir: " << verbose_dir << "\n";
+        std::cout << "Visualization dir: " << visualization_dir << "\n";
         if (!verbose)
             return;
         std::filesystem::create_directories(verbose_dir);
