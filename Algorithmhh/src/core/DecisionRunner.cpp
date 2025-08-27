@@ -121,7 +121,7 @@ namespace Algorithm_212788293_212497127
                 return 315;
 
             // if waypoint == me: keep current facing
-            return snap45(0);
+            return snap45(me.facing_deg);
         }
 
         // next cell coordinates if we move one step forward from current facing

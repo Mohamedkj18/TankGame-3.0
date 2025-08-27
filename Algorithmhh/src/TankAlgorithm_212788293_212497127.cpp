@@ -63,9 +63,6 @@ namespace Algorithm_212788293_212497127
     {
         if (!have_bi_)
         {
-            // If your ActionRequest has GetBattleInfo, you can return it here.
-            // Otherwise, we rotate deterministically to keep progress.
-            // return ::ActionRequest::GetBattleInfo;
             return ::ActionRequest::GetBattleInfo;
         }
 
@@ -90,7 +87,7 @@ namespace Algorithm_212788293_212497127
             // aligned → perform this scripted step
             ::ActionRequest ar = sh ? ::ActionRequest::Shoot : ::ActionRequest::MoveForward;
 
-            // advance to next step; if done, we’ll ask for BI next call
+            // advance to next step; if done, ask for fresh BI next call
             if (++plan_idx_ >= bi_.plan_len)
             {
                 have_bi_ = false;
@@ -100,6 +97,14 @@ namespace Algorithm_212788293_212497127
         }
 
         // Fallback to single-step motor if no script provided
+        // IMPORTANT: never MoveForward here. We don't have a map view in TA to verify safety.
+        // Use single-step only for aiming/shooting, otherwise request new BI.
+        if (bi_.dir_dx == 0 && bi_.dir_dy == 0)
+        {
+            have_bi_ = false;
+            return ::ActionRequest::GetBattleInfo;
+        }
+
         const int want = dirIndexFromDelta(bi_.dir_dx, bi_.dir_dy);
         if (want != facing_idx_)
         {
@@ -111,12 +116,15 @@ namespace Algorithm_212788293_212497127
             return ar;
         }
 
-        // aligned
-        ::ActionRequest ar = bi_.shoot_when_aligned ? ::ActionRequest::Shoot
-                                                    : ::ActionRequest::MoveForward;
-        // single-step orders are "one-and-done"
+        // aligned: only shoot if explicitly told; otherwise refresh BI (do NOT step blindly)
+        if (bi_.shoot_when_aligned)
+        {
+            have_bi_ = false; // one-and-done
+            return ::ActionRequest::Shoot;
+        }
+
         have_bi_ = false;
-        return ar;
+        return ::ActionRequest::GetBattleInfo;
     }
 
 } // namespace Algorithm_212788293_212497127

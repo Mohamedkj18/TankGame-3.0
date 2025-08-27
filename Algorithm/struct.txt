@@ -1,0 +1,30 @@
+Algorithm2/
+├── .DS_Store
+├── Makefile
+├── p.zip
+├── README.md
+├── include/
+│   ├── .DS_Store
+│   ├── MyBattleInfo.h
+│   ├── MyPlayer.h
+│   ├── MyTankAlgorithm.h
+│   └── Roles/
+│       ├── ChaserRole.h
+│       ├── DecoyRole.h
+│       ├── DefenderRole.h
+│       ├── EvasiorRole.h
+│       ├── Role.h
+│       └── SniperRole.h
+├── src/
+│   ├── .DS_Store
+│   ├── MyBattleInfo.cpp
+│   ├── MyTankAlgorithm.cpp
+│   ├── Player.cpp
+│   ├── Player1.cpp
+│   └── Roles
+│       ├── ChaserRole.cpp
+│       ├── Decoy.cpp
+│       ├── DefenderRole.cpp
+│       ├── EvaisorRole.cpp
+│       ├── Role.cpp
+│       └── SniperRole.cpp
