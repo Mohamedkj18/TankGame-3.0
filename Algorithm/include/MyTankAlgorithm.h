@@ -72,7 +72,7 @@ namespace Algorithm_212788293_212497127
         std::set<int> getEnemyTanks() { return threats; };
         UC::Direction getCurrentDirection() const { return currentDirection; }
         void setCurrentDirection(UC::Direction dir) { currentDirection = dir; }
-
+        std::set<int> getMines(){return mines;}
         std::pair<int, int> getCurrentPosition() const { return currentPos; }
         void setCurrentPosition(std::pair<int, int> pos) { currentPos = pos; }
 

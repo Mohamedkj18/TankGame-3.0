@@ -16,6 +16,7 @@
 #include <regex>
 #include <atomic>
 
+
 struct GameArgs
 {
     size_t map_width, map_height, max_steps, num_shells;

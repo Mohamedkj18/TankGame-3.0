@@ -62,26 +62,29 @@ int ComparativeMode::register2Algorithms(Cli cli, std::vector<LoadedLib> algoLib
         usage("Failed to load Algorithm shared object: " + cli.kv["algorithm1"] + "\nError: " + err + "\n");
         return 1;
     }
-
-
+    algoLibs.push_back(lib1);
     algoReg.validateLastRegistration();
     algoReg.updateAlgoID();
 
     algoReg.createAlgorithmFactoryEntry(fs::path(cli.kv["algorithm2"]).stem().string());
-     
-    if (!dlopen_self_register(cli.kv["algorithm2"], lib2, err)) {
-        usage("Failed to load Algorithm shared object: " + cli.kv["algorithm2"] + "\nError: " + err + "\n");
-        return 1;
+    if(cli.kv["algorithm2"] == cli.kv["algorithm1"]){
+        algoReg.getPlayerAndAlgoFactory(algoReg.getAlgoID()) = algoReg.getPlayerAndAlgoFactory(0);
+        algoReg.updateAlgoID();
     }
-    algoReg.validateLastRegistration();
-    algoReg.updateAlgoID();
+    else{ 
+        if (!dlopen_self_register(cli.kv["algorithm2"], lib2, err)) {
+            usage("Failed to load Algorithm shared object: " + cli.kv["algorithm2"] + "\nError: " + err + "\n");
+            return 1;
+        }
+        algoReg.validateLastRegistration();
+        algoReg.updateAlgoID();
+        algoLibs.push_back(lib2);
+    }
 
     if (algoReg.count() < 2) {
         usage("algorithms_folder must contain at least two algorithms.");
         return 1;
     }
-    algoLibs.push_back(lib1);
-    algoLibs.push_back(lib2);
     return 0;
 }
 
@@ -230,7 +233,6 @@ void ComparativeMode::writeComparativeResults(const std::string& game_managers_f
     const std::string out_path = game_managers_folder + "/comparative_results_" + unique_time_str() + ".txt";
     std::ofstream out(out_path);
     if (!out) throw std::runtime_error("Failed to open output file: " + out_path);
-    printHeader(out, game_managers_folder, game_map_filename, algorithm1_so, algorithm2_so,  groups.size());
     if (!printHeader(out, game_managers_folder, game_map_filename, algorithm1_so, algorithm2_so, groups.size())) {
         out.close();
         return;

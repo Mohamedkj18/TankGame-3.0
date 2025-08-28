@@ -23,15 +23,23 @@ return entry.createPlayer(player_index, x, y, max_steps, num_shells); // unique_
 }
 
 
-std::string satelliteViewToString(const SatelliteView& view, size_t width, size_t height) {
+std::string satelliteViewToString(const SatelliteView& sv, size_t W, size_t H) {
     std::string s;
-    s.reserve((width+1)*height);
-    for (size_t y=0;y<height;y++) {
-        for (size_t x=0;x<width;x++) s.push_back(view.getObjectAt(x,y));
-            s.push_back('\n');
+    s.reserve(H*(W+1));
+    for (size_t y=0; y<H; ++y) {
+        for (size_t x=0; x<W; ++x) {
+            char ch = sv.getObjectAt(x,y);
+            unsigned char u = static_cast<unsigned char>(ch);
+            if (ch == '\0' || (u < 32 && ch != '\n' && ch != '\t' && ch != '\r')) ch='.';
+            if (ch == ' ') ch = '.';           
+            if (ch == '\r') ch = '\n';         
+            s.push_back(ch);
+        }
+        s.push_back('\n');
     }
     return s;
 }
+
 
 
 
@@ -57,7 +65,7 @@ RanGame run_single_game(const GameArgs& g, bool verbose) {
         *p1, g.player1Name, *p2, g.player2Name,
         f1, f2
     );
-    std::string gameFinalState = satelliteViewToString(*res.gameState , g.map_width, g.map_height);
+    std::string gameFinalState = satelliteViewToString(*res.gameState.get() , g.map_width, g.map_height);
     return RanGame{ g.GameManagerName, g.map_name, g.playerAndAlgoFactory1ID, g.playerAndAlgoFactory2ID, std::move(res), gameFinalState };
 }
 

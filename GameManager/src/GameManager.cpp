@@ -48,6 +48,10 @@ namespace GameManager_212788293_212497127
     REGISTER_GAME_MANAGER(GameManager);
     // ------------------------ GameManager ------------------------
 
+
+    
+
+
     GameManager::GameManager(bool verbose)
         : verbose(verbose)
     {
@@ -633,7 +637,6 @@ namespace GameManager_212788293_212497127
                       << " player2 remaining tanks= " << result.remaining_tanks[1] << std::endl;
         }
 
-        clearGameState();
         return result;
     };
 
@@ -715,9 +718,7 @@ namespace GameManager_212788293_212497127
                                        const std::string &alg1Name,
                                        const std::string &alg2Name)
     {
-        std::cout << "Verbose mode is " << (verbose ? "ON" : "OFF") << "\n";
-        std::cout << "Verbose dir: " << verbose_dir << "\n";
-        std::cout << "Visualization dir: " << visualization_dir << "\n";
+
         if (!verbose)
             return;
         std::filesystem::create_directories(verbose_dir);

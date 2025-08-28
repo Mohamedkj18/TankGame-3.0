@@ -45,10 +45,7 @@ namespace GameManager_212788293_212497127
         {
             this->direction = UC::DirectionsUtils::stringToDirection[directionStr];
         }
-        else
-        {
-            std::cerr << "Invalid direction string: " << directionStr << std::endl;
-        }
+        
     }
 
     void Tank::moveBackwards()

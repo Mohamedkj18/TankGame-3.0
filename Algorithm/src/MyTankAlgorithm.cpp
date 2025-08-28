@@ -14,7 +14,7 @@ namespace Algorithm_212788293_212497127
     {
         maxMovesPerUpdate = 5;
         range = 20;
-        currentDirection = UC::Direction::U;
+        currentDirection = player_index == 1 ? UC::Direction::L : UC::Direction::R;
     }
 
     void TankAlgorithm_212788293_212497127::updateBattleInfo(BattleInfo &info)

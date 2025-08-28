@@ -12,6 +12,7 @@ namespace Algorithm_212788293_212497127
         std::set<std::pair<int, int>> redZone = createRedZone(shells, 5);
         concatenateSets(redZone, algo.getBannedPositionsForTank());
         concatenateSets(redZone, createRedZone(transformToPairs(algo.getEnemyTanks()), 2));
+   
         std::pair<int, int> target = algo.findFirstLegalLocationToFlee(myPos, redZone);
         path = algo.getPath(myPos, target, redZone);
         if (path.empty())
@@ -57,12 +58,11 @@ namespace Algorithm_212788293_212497127
         std::pair<int, int> pos = algo.getCurrentPosition();
         UC::Direction currentDirection = algo.getCurrentDirection();
         int step = 0;
-
+        
         for (const auto &pathStep : path)
         {
             if (step >= maxMovesPerUpdate)
                 break;
-
             // Determine the direction to this path step
             UC::Direction desiredDir = getDirectionFromPosition(pos, pathStep);
 

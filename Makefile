@@ -1,6 +1,10 @@
 # ================= Tanks Game 3.0 — Root Makefile =================
 
-# Detect platform
+# ---- IDs (edit if needed) ----
+STUDENT1 := 212788293
+STUDENT2 := 212497127
+
+# ---- Platform ----
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
   PLUG_EXT  := dylib
@@ -10,68 +14,44 @@ else
   RPATH_VAR := LD_LIBRARY_PATH
 endif
 
-# Optional user overrides
-CXX      ?= c++
-CXXFLAGS ?= -std=c++20 -O2 -Wall -Wextra -Wpedantic
-
-# Paths
+# ---- Paths ----
 ALGO_DIR    := Algorithm
 GAMEMAN_DIR := GameManager
 SIM_DIR     := Simulator
-DIST_DIR    := dist
 
-# Built artifacts (from sub-Makefiles)
-SIM_BIN := $(SIM_DIR)/build/simulator
-# Plugins are emitted under tests/* (per the updated sub-Makefiles)
-ALGO_GLOB := tests/Algorithms/Algorithm_*.$(PLUG_EXT)
-GM_GLOB   := tests/GameManagers/GameManager_*.$(PLUG_EXT)
+# ---- Artifacts as produced by sub-Makefiles (must live inside each folder)
+SIM_BIN := $(SIM_DIR)/simulator_$(STUDENT1)_$(STUDENT2)
+ALGO_SO := $(ALGO_DIR)/Algorithm_$(STUDENT1)_$(STUDENT2).$(PLUG_EXT)
+GM_SO   := $(GAMEMAN_DIR)/GameManager_$(STUDENT1)_$(STUDENT2).$(PLUG_EXT)
 
-.PHONY: all algorithm gamemanager simulator run print clean veryclean dist package submit
+.PHONY: all algorithm gamemanager simulator run print clean veryclean submit zipcheck
 
 # Build everything
 all: algorithm gamemanager simulator
 
-# Delegate to subprojects (use their default targets)
 algorithm:
-	@$(MAKE) -C $(ALGO_DIR) CXX="$(CXX)"
+	@$(MAKE) -C $(ALGO_DIR)
 
 gamemanager:
-	@$(MAKE) -C $(GAMEMAN_DIR) CXX="$(CXX)"
+	@$(MAKE) -C $(GAMEMAN_DIR)
 
 simulator:
-	@$(MAKE) -C $(SIM_DIR) CXX="$(CXX)"
+	@$(MAKE) -C $(SIM_DIR)
 
-
-# Run simulator with proper search path (usually not needed due to rpath, but safe)
+# Convenience run (rpath should already cover this, but keep safe env var)
 run: all
-	@echo ">>> Running simulator with $(RPATH_VAR)=."
-	@$(RPATH_VAR)=. $(SIM_BIN)
-
-# Bundle deliverables into dist/
-dist: all
-	@mkdir -p $(DIST_DIR)
-	@cp -f $(SIM_BIN) $(DIST_DIR)/
-	# copy all algorithm plugins
-	@cp -f $(ALGO_GLOB) $(DIST_DIR)/ 2>/dev/null || true
-	# copy all game manager plugins
-	@cp -f $(GM_GLOB)   $(DIST_DIR)/ 2>/dev/null || true
-	@echo "Packed into $(DIST_DIR)/:"
-	@ls -l $(DIST_DIR)
-
-# Example submission tarball (adjust if your course needs specific names)
-submit: dist
-	@cd $(DIST_DIR) && tar -czf submission.tgz simulator Algorithm_*.$(PLUG_EXT) GameManager_*.$(PLUG_EXT) 2>/dev/null || true
-	@echo "Created $(DIST_DIR)/submission.tgz"
+	@echo ">>> Running simulator (with $(RPATH_VAR)=.. just in case)"
+	@$(RPATH_VAR)=.. $(SIM_BIN)
 
 print:
 	@echo "Platform   : $(UNAME_S)"
 	@echo "PLUG_EXT   : $(PLUG_EXT)"
-	@echo "Simulator  : $(SIM_BIN)"
-	@echo "Algo glob  : $(ALGO_GLOB)"
-	@echo "GM glob    : $(GM_GLOB)"
-	@echo "RPATH var  : $(RPATH_VAR)"
+	@echo "SIM_BIN    : $(SIM_BIN)"
+	@echo "ALGO_SO    : $(ALGO_SO)"
+	@echo "GM_SO      : $(GM_SO)"
+	@echo "RPATH VAR  : $(RPATH_VAR)"
 
-# Cleanup
+# Clean objects/binaries in subprojects
 clean:
 	@$(MAKE) -C $(ALGO_DIR) clean || true
 	@$(MAKE) -C $(GAMEMAN_DIR) clean || true
@@ -82,5 +62,24 @@ veryclean: clean
 	@$(MAKE) -C $(ALGO_DIR) veryclean || true
 	@$(MAKE) -C $(GAMEMAN_DIR) veryclean || true
 	@$(MAKE) -C $(SIM_DIR) veryclean || true
-	@rm -rf $(DIST_DIR)
-	@echo "Removed libraries, binaries, and dist/."
+	@echo "Removed libraries and binaries."
+
+# ---- Submission zip (sources only, as per assignment) ----
+# Produces: ex3_<id1>_<id2>.zip with folders and root files, excluding binaries & build trees.
+SUBMIT_ZIP := ex3_$(STUDENT1)_$(STUDENT2).zip
+
+# Optional check to ensure required root files exist
+zipcheck:
+	@test -f README.md || (echo "Missing README.md at repo root"; exit 1)
+	@test -f students.txt || (echo "Missing students.txt at repo root"; exit 1)
+
+submit: veryclean zipcheck
+	@echo "Creating $(SUBMIT_ZIP) (sources only)..."
+	@zip -r "$(SUBMIT_ZIP)" \
+		Simulator Algorithm GameManager common UserCommon Makefile README.md students.txt \
+		-x "*/build/*" \
+		-x "$(ALGO_DIR)/*.so" "$(ALGO_DIR)/*.dylib" \
+		-x "$(GAMEMAN_DIR)/*.so" "$(GAMEMAN_DIR)/*.dylib" \
+		-x "$(SIM_DIR)/simulator_*" \
+		> /dev/null
+	@echo "Done: $(SUBMIT_ZIP)"

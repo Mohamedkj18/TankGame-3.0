@@ -1,1 +1,0 @@
-folder: in order to allow load of different GameManager “.so” files (together or separately), the name of the .so file must be unique, using the ids of the submitters, as follows: GameManager_098765432_123456789.so additionally, all your code shall be located inside a namespace with the unique name GameManager_098765432_123456789

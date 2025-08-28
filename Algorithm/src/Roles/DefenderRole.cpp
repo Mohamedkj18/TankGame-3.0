@@ -12,7 +12,6 @@ namespace Algorithm_212788293_212497127
 
         // 1) Scan for nearest enemy (within range 7)
         auto targetOpt = algo.findEnemyInRange(myPos, 20);
-        std::cout << "Defender at " << myPos.first << "," << myPos.second << " looking for enemies...\n";
         // If no known enemy -> just request info
         if (!targetOpt.has_value())
         {
@@ -22,7 +21,6 @@ namespace Algorithm_212788293_212497127
         }
 
         std::pair<int, int> target = *targetOpt;
-        std::cout << "Defender sees enemy at " << target.first << "," << target.second << "\n";
         // 2) Rotate toward target
         UC::Direction desiredDir = getDirectionFromPosition(myPos, target);
         if (currentDir != desiredDir)

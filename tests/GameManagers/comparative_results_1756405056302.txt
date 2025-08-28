@@ -1,0 +1,39 @@
+=== Comparative Mode Results ===
+Map: valid_input_3v3_P2_trapped.txt
+Algorithm 1: Algorithm_old.dylib
+Algorithm 2: Algorithm_old.dylib
+Game Managers folder: tests/GameManagers
+Total distinct outcome groups: 2
+
+---- Group ----
+Winner: Player 2  |  Reason: ALL_TANKS_DEAD  |  Rounds: 29  |  GameManagers: 2
+Managers: GameManager_212788293_212497126, GameManager_212788293_212497128
+Final board:
+##############.
+#@@@.......@@@#
+#@2@.......@2@#
+#@@@.......@@@#
+#.@*........@.#
+#.##..#######.#
+#.............#
+#..@..@@@..@..#
+#.....@2@.....#
+......@@@.....#
+.##############
+
+---- Group ----
+Winner: Player 2  |  Reason: ALL_TANKS_DEAD  |  Rounds: 75  |  GameManagers: 1
+Managers: GameManager_212788293_212497127
+Final board:
+..#..##########
+#@@@.....2..@@.
+#@.@.......@.@#
+.@@@.......@@.#
+#.@.........@.#
+#.###.###..##.#
+#.............#
+#.....@@@..@..#
+#.....@.@....*#
+......@@@.*....
+#.##..#########
+

@@ -30,7 +30,7 @@ namespace Algorithm_212788293_212497127
 
         int tankId = getTankId({myX, myY});
 
-        EnemyScanResult scan = assignRole(tankId, {myX, myY}, mines, shells, enemyTanks, friendlyTanks.size());
+        EnemyScanResult scan = assignRole(tankId, {myX, myY}, shells, enemyTanks, friendlyTanks.size());
         if (!scan.ShouldKeepRole)
         {
             info.setRole(createRole(tankId, {myX, myY}, scan, shells, enemyTanks, friendlyTanks.size()));
@@ -51,7 +51,6 @@ namespace Algorithm_212788293_212497127
         {
             tanksRemainingShells[tankId] = num_shells;
         }
-        std::cout << " Tank: " << tankId << " Role: " << tankRoles[tankId] << std::endl;
     }
 
     void MyPlayer::updateTanksStatus()
@@ -83,7 +82,7 @@ namespace Algorithm_212788293_212497127
         tankRoles.erase(tankId);
     }
 
-    EnemyScanResult MyPlayer::assignRole(int tankId, std::pair<int, int> pos, std::set<int> mines, std::set<int> shells, std::set<int> enemyTanks, int numFriendlyTanks)
+    EnemyScanResult MyPlayer::assignRole(int tankId, std::pair<int, int> pos, std::set<int> shells, std::set<int> enemyTanks, int numFriendlyTanks)
     {
 
         EnemyScanResult scan = scanVisibleEnemies(pos.first, pos.second);

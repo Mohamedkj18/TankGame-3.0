@@ -49,6 +49,7 @@ class AlgorithmRegistrar
         {
             return tankAlgorithmFactory != nullptr;
         }
+
     };
 
     

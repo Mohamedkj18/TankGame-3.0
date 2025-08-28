@@ -1,5 +1,4 @@
 # ================= Tanks Game 3.0 — Simulator Makefile =================
-# Exports host symbols; compiles core + {Player, TankAlgorithm, GameManager}Registration
 # Place this file in Simulator/
 
 # ---- Toolchain / Platform ----
@@ -17,8 +16,7 @@ INC_DIRS   := $(ROOT_DIR)/include .. ../common ../UserCommon
 INCS       := $(addprefix -I,$(INC_DIRS))
 
 # ---- Feature toggles ----
-# Use: make SAN=1  to enable Address/UB sanitizers (debug-only)
-SAN ?= 0
+SAN ?= 0   # make SAN=1 to enable ASan/UBSan
 
 # ---- Base flags ----
 CXXFLAGS  ?= -std=c++20 -O2 -Wall -Wextra -Wpedantic
@@ -54,10 +52,9 @@ SRCS      := $(CORE_SRCS) $(MAIN_SRCS) $(REG_SRCS)
 OBJS := $(patsubst $(ROOT_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(filter $(ROOT_DIR)/%,$(SRCS)))
 DEPS := $(OBJS:.o=.d)
 
-# ---- Target ----
+# ---- Target (executable must be in Simulator/) ----
 BIN_NAME := simulator_212788293_212497127
-BIN_PATH := $(BUILD_DIR)/$(BIN_NAME)
-
+BIN_PATH := $(ROOT_DIR)/$(BIN_NAME)
 
 .PHONY: all clean veryclean print run
 

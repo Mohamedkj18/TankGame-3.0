@@ -57,7 +57,7 @@ namespace Algorithm_212788293_212497127
         }
 
     protected:
-        EnemyScanResult assignRole(int tankId, std::pair<int, int> pos, std::set<int> mines, std::set<int> shells, std::set<int> enemyTanks, int numFriendlyTanks);
+        EnemyScanResult assignRole(int tankId, std::pair<int, int> pos, std::set<int> shells, std::set<int> enemyTanks, int numFriendlyTanks);
         virtual std::unique_ptr<Algorithm_212788293_212497127::Role> createRole(int tankId, std::pair<int, int> pos, EnemyScanResult scan, std::set<int> shells, std::set<int> enemyTanks, int numOfFriendlyTanks) = 0;
 
         virtual bool shouldKeepRole(int tankId, const std::pair<int, int> &pos, const std::string &role, EnemyScanResult scan, std::set<int> shells, std::set<int> enemyTanks, int numFriendlyTanks) = 0;

@@ -17,4 +17,4 @@ class InitialSatellite : public SatelliteView {
         player2Tanks(player2Tanks), walls(walls), mines(mines) {}
 
         char getObjectAt(size_t x, size_t y) const override ;
-    };
+        };
