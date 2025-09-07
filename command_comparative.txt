@@ -1,1 +1,0 @@
-./Simulator/build/simulator_212788293_212497127 -comparative game_map=tests/maps/valid_input_3v3_P1_trapped.txt game_managers_folder=tests/GameManagers algorithm1=tests/Algorithms/Algorithm_212788293_212497127.dylib algorithm2=tests/Algorithms/Algorithm_212788293_212497128.dylib

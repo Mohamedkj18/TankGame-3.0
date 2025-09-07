@@ -1,7 +1,0 @@
-game_maps_folder=tests/maps
-game_manager=GameManager_212788293_212497127.dylib
-
-Algorithm_oldcopy copy 35
-Algorithm_old 29
-Algorithm_oldcopy 27
-Algorithm_oldcoy 13
